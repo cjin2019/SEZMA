@@ -1,0 +1,11 @@
+{
+    "network_capture_config": {
+        "duration_seconds": 40,
+        "output_file": "/path/to/data/ml_11_11_2022_1.pcap"
+    },
+    "frame_capture_config": {
+        "device_index": 1,
+        "duration_seconds": 10,
+        "output_frame_dir": "/path/to/data/frames_ml_11_11_2022_1"
+    }
+}
