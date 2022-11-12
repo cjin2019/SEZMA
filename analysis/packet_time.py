@@ -1,5 +1,4 @@
 import time
-from scapy.all import *
 
 """
 PacketTime represents the received time of the packet. This includes 
