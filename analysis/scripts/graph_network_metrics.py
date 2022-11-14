@@ -1,12 +1,11 @@
 import json
-import matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.colors as mcolors
 from pathlib import Path
 from typing import List
 
 from utilities import parser
-from network_data import NetworkData
+from analysis.network_data import NetworkData
 
 def map_frame_to_color(frame: bytes) -> str:
     colors = [color for color in mcolors.get_named_colors_mapping() if color[:4] == "xkcd"]
@@ -14,7 +13,7 @@ def map_frame_to_color(frame: bytes) -> str:
     return colors[frame_val % len(colors)]
 
 if __name__ == "__main__":
-    config_dir = Path(__file__).parent.parent
+    config_dir = Path(__file__).parent.parent.parent
     config_file = config_dir / "config.json"
 
     with config_file.open() as f:

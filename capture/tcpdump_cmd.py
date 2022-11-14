@@ -1,5 +1,3 @@
-from utilities.parser import *
-
 import subprocess
 import os
 import json
@@ -7,6 +5,8 @@ import time
 
 from datetime import timedelta
 from pathlib import Path
+
+from utilities.parser import *
 
 ZOOM_COUNT = 3 # number of times zoom appears on ps -A output when a meeting is going on
 CHECK_COUNT = 3 # number of times to make sure there exists a zoom meeting and is in the foreground of screen

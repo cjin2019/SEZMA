@@ -15,4 +15,4 @@ class PacketTime:
         return hash((self.second_precision, self.microseconds))
     
     def __str__(self) -> str:
-        return time.strftime("%Y-%m-%d %H:%M:%S", self.second_precision) + "{:x<4d}".format(self.microseconds)
+        return time.strftime("%Y-%m-%d %H:%M:%S", self.second_precision) + ".{:06d}".format(self.microseconds)

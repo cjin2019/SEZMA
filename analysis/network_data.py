@@ -2,7 +2,7 @@ from typing import List, Dict
 from scapy.all import PacketList, get_if_addr, rdpcap, conf
 from scapy.layers.inet import IP, UDP
 
-from udp_packet import UDPPacket
+from analysis.udp_packet import UDPPacket
 from utilities import *
 
 """
@@ -26,10 +26,9 @@ class NetworkData:
         for packet in self.packets:
             if IP in packet and UDP in packet and hasattr(packet[UDP], 'load') and packet[IP].dst == self.local_ip_addr:
                 udp_packet = UDPPacket(packet)
-                if udp_packet.get_media_type() == NetworkData.VIDEO_MEDIA_TYPE:
+                if udp_packet.get_media_type() == NetworkData.VIDEO_MEDIA_TYPE: # helps determine if the packet is at least a zoom packet
                     udp_packets.append(UDPPacket(packet))
         
-        # udpPackets = [udpPacket for udpPacket in udpPackets if udpPacket.get_media_type()==16]
         return udp_packets
     
     def get_packets_per_frame(self) -> Dict[bytes, List[UDPPacket]]:
