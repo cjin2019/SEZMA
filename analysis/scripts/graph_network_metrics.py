@@ -71,7 +71,7 @@ if __name__ == "__main__":
         plt.rc('legend', fontsize=SMALL_SIZE)    # legend fontsize
         plt.rc('figure', titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
-        fig, ax = plt.subplots(figsize=(300, 40))
+        fig, ax = plt.subplots(figsize=(600, 80))
         
         ax.scatter(times, sizes, c=frame_colors, s=800)
         ax.set_title("Timeline of Packets Sent per Frame")
@@ -81,7 +81,7 @@ if __name__ == "__main__":
         image_filename = args_tcpdump["output_file"][:args_tcpdump["output_file"].rindex(".")] + "_timeline.png"
         fig.savefig(image_filename)
 
-        fig, ax = plt.subplots(figsize=(300,40))
+        fig, ax = plt.subplots(figsize=(600,80))
         ax.scatter(time_packet_start, time_withinpacket, s=800)
         ax.set_title("Time Difference Between First and Last Packet Per Frame")
         ax.set_xlabel("Unix Time of First Packet Per Frame")
@@ -90,7 +90,7 @@ if __name__ == "__main__":
         image_filename = args_tcpdump["output_file"][:args_tcpdump["output_file"].rindex(".")] + "_within_frame.png"
         fig.savefig(image_filename)
 
-        fig, ax = plt.subplots(figsize=(300,40))
+        fig, ax = plt.subplots(figsize=(600,80))
         ax.scatter(time_packet_start[1:], time_betweenpacket, s=800)
         ax.set_title("Time Difference Between Frames")
         ax.set_xlabel("Unix Time of First Packet Per Frame")
@@ -99,7 +99,7 @@ if __name__ == "__main__":
         image_filename = args_tcpdump["output_file"][:args_tcpdump["output_file"].rindex(".")] + "_between_frame.png"
         fig.savefig(image_filename)
 
-        fig, ax = plt.subplots(figsize=(300,40))
+        fig, ax = plt.subplots(figsize=(600,80))
         ax.scatter(time_packet_start, num_packets_per_frame, s=800)
         ax.set_title("Number of Packets Per Frame")
         ax.set_xlabel("Unix Time of First Packet Per Frame")
