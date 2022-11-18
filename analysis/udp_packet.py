@@ -45,3 +45,16 @@ class UDPPacket:
         Returns the size of the UDP packet
         """
         return len(self.load)
+    
+    def get_rtp_payload_type(self) -> int:
+        """
+        Returns the RTP Payload Type
+        Check https://en.wikipedia.org/wiki/Real-time_Transport_Protocol
+
+        98: Main Stream
+        110: FEC
+        """
+        rtp_idx = 24 + self.zoom_packet_offset
+        rtp_pt_idx = rtp_idx + 1
+        rtp_octet2 = int(self.load[rtp_pt_idx])
+        return rtp_octet2 & 127 

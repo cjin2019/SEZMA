@@ -1,3 +1,4 @@
+import csv
 import json
 from pathlib import Path
 
@@ -17,5 +18,6 @@ if __name__ == "__main__":
         network_data: NetworkData = NetworkData(args_tcpdump["output_file"])
         for packet in network_data.udp_packets:
             packet_time = PacketTime(packet.time)
-            print(f"time = {packet_time}, frame = {packet.get_frame()}, size = {packet.get_packet_size()}")
+            print(f"src = {packet.packet_src}, time = {packet_time}, frame = {packet.get_frame()}, size = {packet.get_packet_size()}, rtp pt = {packet.get_rtp_payload_type()}")
+
 

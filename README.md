@@ -28,5 +28,16 @@ Only compatible for macOS
     1. `pip3 install scapy` inside your virtual environment `venv`
 
 ##### videonetworkapp
-1. Make sure your virtual environment is activated (`source /path/to/venv/bin/activate`)
+1. Make sure your virtual environment is activated (`source /path/to/env/bin/activate`)
 2. Inside `videonetworkapp/`, run `python3 -m pip install -e .`
+
+### Commands to Run
+
+#### Set up configuration
+1. Edit `config.json` file to save to the data to appropriate location and run the screen capture and ffmpeg command for however long you like
+2. To get the appropriate device index, run `ffmpeg -f avfoundation -list_devices true -i ""`. Choose the number in `[]` that correspond to screen capture for video
+
+#### Capture Zoom Screen
+1. Activate virtual environment with `source /path/to/env/bin/activate`
+2. `cd videonetworkapp` 
+3. `python3 capture/tcpdump_cmd.py`
