@@ -4,6 +4,10 @@ from scapy.all import Packet
 
 from analysis.packet_constants import contains_value, ZoomMediaWrapper, RTPWrapper
 from analysis.avc_3d_header import AVC3dExtension
+from analysis.mvc_header import MVCExtension
+from analysis.rtp import RTP
+
+
 """
 UDPPacket contains data contained inside a UDP packet from tcpdump
 """
@@ -45,12 +49,16 @@ class UDPPacket:
             return ZoomMediaWrapper.INVALID
 
         return ZoomMediaWrapper(self.load[idx])
-    
+
     def get_packet_size(self) -> int:
         """
         Returns the size of the UDP packet
         """
         return len(self.load)
+    
+    def get_next_layer(self) -> "RTP":
+        rtp_idx: int = 24 + self.zoom_packet_offset
+        return RTP(self.load[rtp_idx:])
     
     def get_rtp_payload_type(self) -> "RTPWrapper":
         """
@@ -61,6 +69,10 @@ class UDPPacket:
         rtp_pt_idx = rtp_idx + 1
         rtp_octet2 = self.load[rtp_pt_idx]
         return RTPWrapper(rtp_octet2 & 127)
+    
+    def get_rtp_payload(self) -> bytes:
+        nal_idx: int = self.__get_nal_idx()
+        return self.load[nal_idx:]
     
     def get_nal_type(self) -> int:
         """
@@ -76,8 +88,27 @@ class UDPPacket:
         nal_idx: int = self.__get_nal_idx()
         return self.load[nal_idx] & 32 >> 5
     
+    def get_mvc_extension(self) -> Union["MVCExtension", None]:
+        if not self.__has_avc_3d_extension_flag():
+            # print("entered here")
+            return None
+        
+        mvc_idx: int = self.__get_nal_idx() + 1
+        mvc_values: int = int.from_bytes(self.load[mvc_idx: mvc_idx+3], 'big')
+
+        non_idr_flag: int = mvc_values >> 23
+        priority_id: int = (mvc_values >> 17) & 63
+        view_id: int = (mvc_values >> 7) & 1023
+        temporal_id: int = (mvc_values >> 4) & 7
+        anchor_pic_flag: int = (mvc_values >> 3) & 1
+        inter_view_flag: int = (mvc_values >> 2) & 1
+        reserved_one_bit: int = (mvc_values >> 1) & 1
+
+        return MVCExtension(non_idr_flag, priority_id, view_id, temporal_id, anchor_pic_flag, inter_view_flag, reserved_one_bit)
+    
     def get_avc_3d_extension(self) -> Union["AVC3dExtension", None]:
         if not self.__has_avc_3d_extension_flag():
+            # print("entered here")
             return None
 
         avc_idx: int = self.__get_nal_idx() + 1
@@ -110,20 +141,25 @@ class UDPPacket:
         nal_idx: int = self.__get_nal_idx()
         avc_idx: int = nal_idx + 1
         return self.load[avc_idx] >> 7 == 1
-
+    
     def __get_nal_idx(self) -> int:
         """
         Returns the index of the NAL unit
         Check https://en.wikipedia.org/wiki/Real-time_Transport_Protocol to find the index
-        """
+        """ 
         rtp_idx: int = 24 + self.zoom_packet_offset
+        version: int = (self.load[rtp_idx] & 192) >> 6
+
+        if version != 2:
+            # TODO -- change to error message
+            print("incorrect version!")
         is_extension: bool = self.load[rtp_idx] & 16 == 16
         csrc_count: int = self.load[rtp_idx] & 15
         
         after_rtp_header_main_idx: int = rtp_idx + 12 + csrc_count * 4
         if not is_extension:
             return after_rtp_header_main_idx
-
+        
         rtp_header_extension_length_idx: int = after_rtp_header_main_idx + 2 # 2 bytes after defined profile
         rtp_header_extension_length: int = int.from_bytes(self.load[rtp_header_extension_length_idx: rtp_header_extension_length_idx + 2], 'big')
 

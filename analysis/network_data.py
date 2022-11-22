@@ -27,8 +27,9 @@ class NetworkData:
         for packet in self.packets:
             if IP in packet and UDP in packet and hasattr(packet[UDP], 'load') and packet[IP].dst == self.local_ip_addr:
                 udp_packet = UDPPacket(packet)
-                if udp_packet.get_media_type() == ZoomMediaWrapper.RTP_VIDEO: # helps determine if the packet is at least a zoom packet
-                    udp_packets.append(UDPPacket(packet))
+                if udp_packet.get_media_type() != ZoomMediaWrapper.INVALID: # helps determine if the packet is at least a zoom packet
+                # if udp_packet.packet_src == "10.29.45.121":
+                    udp_packets.append(udp_packet)
         
         return udp_packets
     
