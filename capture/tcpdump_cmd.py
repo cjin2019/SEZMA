@@ -57,7 +57,8 @@ def is_zoom_meeting_active() -> bool:
         if b"zoom" in line:
             curr_zoom_count += 1
     
-    return curr_zoom_count == ZOOM_COUNT
+    # also can be 4
+    return curr_zoom_count >= ZOOM_COUNT
 
 def is_zoom_fullscreen() -> bool:
     """
@@ -80,6 +81,7 @@ def is_zoom_fullscreen() -> bool:
     width: float = float(parse_swift_output(swift_out[4]))
     height: float = float(parse_swift_output(swift_out[5]))
 
+    # print(abs(x + width - screen_width) <= FULL_SCREEN_SIZE_ERROR and abs(y + height - screen_height) <= FULL_SCREEN_SIZE_ERROR)
     return abs(x + width - screen_width) <= FULL_SCREEN_SIZE_ERROR and abs(y + height - screen_height) <= FULL_SCREEN_SIZE_ERROR
 
 def can_collect_data() -> None:

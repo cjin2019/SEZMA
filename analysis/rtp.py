@@ -2,6 +2,9 @@ from dataclasses import dataclass
 from enum import Enum
 from typing import List, Optional, Tuple, Type, Union
 
+from analysis.packet_constants import RTPWrapper
+from analysis.nal import NAL
+
 class ExceptionCodes(Enum):
     INVALID_RTP_VERSION = "Invalid RTP Version"
 
@@ -19,7 +22,7 @@ class RTPHeader:
     has_extension: int
     csrc_count: int
     marker: int
-    payload_type: int
+    payload_type: "RTPWrapper"
     seq_num: int
     timestamp: bytes
     ssrc: bytes
@@ -46,7 +49,7 @@ class RTPHeader:
 
         oct2: int = rtp_data[1]
         marker: int = oct2 >> 7
-        payload_type: int = oct2 & 127
+        payload_type: "RTPWrapper" = RTPWrapper(oct2 & 127) 
 
         seq_num: int = int.from_bytes(rtp_data[2:4], 'big')
         timestamp: bytes = rtp_data[4:8]
@@ -86,9 +89,10 @@ class RTPHeader:
             ), \
             payload_idx
 
-
-
 class RTP:
+    """
+        Check https://en.wikipedia.org/wiki/Real-time_Transport_Protocol
+    """
     def __init__(self, data: bytes) -> None:
         header, payload_idx = RTPHeader.get_header(data)
         self.__header: "RTPHeader" = header
@@ -102,6 +106,8 @@ class RTP:
     def payload(self) -> bytes:
         return self.__payload
     
+    def get_next_layer(self) -> "NAL":
+        return NAL(self.__payload)
     
     
 
