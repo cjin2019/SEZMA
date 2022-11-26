@@ -3,14 +3,13 @@ from scapy.all import PacketList, get_if_addr, rdpcap, conf
 from scapy.layers.inet import IP, UDP
 
 from analysis.udp_packet import UDPPacket
-from analysis.packet_constants import ZoomMediaWrapper
+from analysis.packet_constants import ZoomMediaWrapper, RTPWrapper
 from utilities import *
 
 """
 NetworkData only supports parsing UDP packets
 """
 class NetworkData:
-    VIDEO_MEDIA_TYPE = 16
     def __init__(self, filename: str):
         self.filename: str = filename
         self.packets: PacketList = rdpcap(filename)
@@ -42,10 +41,11 @@ class NetworkData:
 
         output = {}
         for packet in self.udp_packets:
-            curr_frame = packet.get_frame()
-            if curr_frame not in output:
-                output[curr_frame] = []
-            output[curr_frame].append(packet)
+            if packet.get_media_type() == ZoomMediaWrapper.RTP_VIDEO and packet.get_next_layer().header.payload_type == RTPWrapper.VIDEO:
+                curr_frame = packet.get_frame()
+                if curr_frame not in output:
+                    output[curr_frame] = []
+                output[curr_frame].append(packet)
 
         return output
             

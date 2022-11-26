@@ -1,8 +1,7 @@
 from dataclasses import dataclass
-from typing import Union
+from typing import Dict, Union
 
-from analysis.avc_3d_header import AVC3dExtension
-from analysis.mvc_header import MVCExtension
+from analysis.fua import FU_A
 
 @dataclass
 class NALHeader:
@@ -24,15 +23,20 @@ class NALHeader:
                 nal_unit_type=nal_unit_type
             )
 
+
 class NAL:
     def __init__(self, nal_data: bytes) -> None:
-        self.header = NALHeader.get_header(nal_data)
-        self.payload = nal_data[1:]
+        self.__header = NALHeader.get_header(nal_data)
+        self.__payload = nal_data[1:]
     
-    def get_extension_header(self) -> Union["AVC3dExtension", "MVCExtension"]:
-        avc_flag: bool = self.payload[0] >> 7 == 1
-        if not avc_flag:
-            return MVCExtension.create(self.payload)
-        return AVC3dExtension.create(self.payload)
-
+    @property
+    def header(self) -> "NALHeader":
+        return self.__header
+    
+    @property
+    def payload(self) -> bytes:
+        return self.__payload
+        
+    def get_next_layer(self) -> "FU_A":
+        return FU_A(self.payload)
 

@@ -1,19 +1,9 @@
 from dataclasses import dataclass
-from enum import Enum
-from typing import List, Optional, Tuple, Type, Union
+from typing import Dict, Optional, Tuple, Type, Union
 
-from analysis.packet_constants import RTPWrapper
+from analysis.exceptions import PacketException
+from analysis.packet_constants import RTPWrapper, ExceptionCodes
 from analysis.nal import NAL
-
-class ExceptionCodes(Enum):
-    INVALID_RTP_VERSION = "Invalid RTP Version"
-
-class RTPException(Exception):
-    def __init__(self, code: ExceptionCodes) -> None:
-        self.code = code
-    
-    def __str__(self) -> str:
-        return self.code.value
 
 @dataclass
 class RTPHeader:
@@ -29,7 +19,7 @@ class RTPHeader:
     csrcs: Union[Tuple[bytes], Tuple[()]] = ()
     profile_specific_id: Optional[bytes] = None
     extension_header_len: Optional[int] = None
-    extension_header: Optional[bytes] = None
+    extension_header: Optional["RTPExtensionHeader"] = None
 
     @classmethod
     def get_header(cls: Type["RTPHeader"], rtp_data: bytes) -> Tuple["RTPHeader", int]:
@@ -42,7 +32,7 @@ class RTPHeader:
 
         version: int = oct1 >> 6
         if version != 2:
-            raise RTPException(ExceptionCodes.INVALID_RTP_VERSION)
+            raise PacketException(ExceptionCodes.INVALID_RTP_VERSION)
         has_padding: int = (oct1 >> 5) & 1
         has_extension: int = (oct1 >> 4) & 1
         csrc_count: int = oct1 & 15
@@ -68,10 +58,14 @@ class RTPHeader:
         if has_extension == 1:
             extension_idx = 12 + 4 * csrc_count
             profile_specific_id = rtp_data[extension_idx: extension_idx + 2]
-            extension_header_len = int.from_bytes(rtp_data[extension_idx + 2: extension_idx + 4], 'big')
+            extension_header_len = 4 * int.from_bytes(rtp_data[extension_idx + 2: extension_idx + 4], 'big')
             extension_header = rtp_data[extension_idx + 4: extension_idx + 4 + extension_header_len]
             payload_idx = extension_idx + 4 + extension_header_len
         
+        extension_header_input = RTPExtensionHeader({})
+        if extension_header is not None:
+            extension_header_input = RTPExtensionHeader.create(extension_header)
+
         return RTPHeader(
                 version=version,
                 has_padding=has_padding,
@@ -85,9 +79,42 @@ class RTPHeader:
                 csrcs=csrcs,
                 profile_specific_id=profile_specific_id,
                 extension_header_len=extension_header_len,
-                extension_header=extension_header,
+                extension_header=extension_header_input,
             ), \
             payload_idx
+
+class RTPExtensionHeader:
+    """
+    Following one byte
+
+    https://www.rfc-editor.org/rfc/rfc8285.html#section-4.2
+    """
+    def __init__(self, data: Dict[int, bytes]) -> None:
+        self.__data = data
+    
+    def __str__(self) -> str:
+        return str(self.__data)
+    
+    @classmethod
+    def create(cls, data: bytes) -> "RTPExtensionHeader":
+        idx = 0
+        inp = {}
+        while idx < len(data):
+            header: int = data[idx]
+            id: int = (header >> 4)
+
+            if id == 0:
+                break
+            
+            length: int = (header & 15) + 1
+
+            idx += 1
+            extension_data: bytes = data[idx: idx + length]
+            inp[id] = extension_data 
+
+            idx += length
+        
+        return RTPExtensionHeader(inp)
 
 class RTP:
     """
