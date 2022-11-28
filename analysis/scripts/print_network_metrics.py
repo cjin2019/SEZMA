@@ -4,12 +4,12 @@ from pathlib import Path
 from typing import Dict, List
 
 from utilities import parser
-from analysis.parse.exceptions import PacketException
-from analysis.parse.nal import NAL
-from analysis.parse.network_data import NetworkData
-from analysis.parse.packet_time import PacketTime
-from analysis.parse.packet_constants import RTPWrapper, ZoomMediaWrapper
-from analysis.parse.udp_packet import UDPPacket
+from analysis.packet.exceptions import PacketException
+from analysis.packet.nal import NAL
+from analysis.packet.network_data import NetworkData
+from analysis.packet.packet_time import PacketTime
+from analysis.packet.packet_constants import RTPWrapper, ZoomMediaWrapper
+from analysis.packet.udp_packet import UDPPacket
 
 if __name__ == "__main__":
     config_dir = Path(__file__).parent.parent.parent
@@ -43,7 +43,7 @@ if __name__ == "__main__":
                             arr_num: List[int ]= [val for val in rtp_layer.header.extension_header[3]]
                             extension_header_vals.add((arr_num[0], arr_num[1]))
 
-                            # print(f"timestamp {packet.time}, frame {packet.get_frame()}, arr_nums {arr_num}, num_packets = {packet.get_number_packets_per_frame()}, fu_a payload = {len(fu_a.payload)}")
+                            print(f"packet_src {packet.packet_src}, timestamp {packet.time}, frame {packet.get_frame()}, arr_nums {arr_num}, num_packets = {packet.get_number_packets_per_frame()}, fu_a payload = {len(fu_a.payload)}")
 
                         frame_to_size[packet.get_frame()] += len(fu_a.payload)
                 except PacketException:

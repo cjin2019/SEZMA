@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 from typing import Dict, Optional, Tuple, Type, Union
 
-from analysis.parse.exceptions import PacketException
-from analysis.parse.packet_constants import RTPWrapper, ExceptionCodes
-from analysis.parse.nal import NAL
+from analysis.packet.exceptions import PacketException
+from analysis.packet.packet_constants import RTPWrapper, ExceptionCodes
+from analysis.packet.nal import NAL
 
 @dataclass
 class RTPHeader:

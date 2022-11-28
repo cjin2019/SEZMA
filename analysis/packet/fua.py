@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
-from analysis.parse.exceptions import PacketException
-from analysis.parse.packet_constants import ExceptionCodes
+from analysis.packet.exceptions import PacketException
+from analysis.packet.packet_constants import ExceptionCodes
 
 @dataclass
 class FU_AHeader:

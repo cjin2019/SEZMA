@@ -2,8 +2,8 @@ from typing import List, Dict
 from scapy.all import PacketList, get_if_addr, rdpcap, conf
 from scapy.layers.inet import IP, UDP
 
-from analysis.parse.udp_packet import UDPPacket
-from analysis.parse.packet_constants import ZoomMediaWrapper, RTPWrapper
+from analysis.packet.udp_packet import UDPPacket
+from analysis.packet.packet_constants import ZoomMediaWrapper, RTPWrapper
 from utilities import *
 
 """

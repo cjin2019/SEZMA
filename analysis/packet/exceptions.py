@@ -1,4 +1,4 @@
-from analysis.parse.packet_constants import ExceptionCodes
+from analysis.packet.packet_constants import ExceptionCodes
 
 class PacketException(Exception):
     def __init__(self, code: "ExceptionCodes") -> None:

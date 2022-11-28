@@ -3,7 +3,7 @@ import os
 import json
 import time
 
-from datetime import timedelta
+from datetime import date, timedelta
 from pathlib import Path
 
 from utilities.parser import *
@@ -41,8 +41,9 @@ def capture_screen(device_index: int, timeout_sec: int, dir_frames: str) -> subp
         # cleans up previous runs of screen capture
         for f in os.listdir(dir_frames):
             os.remove(os.path.join(dir_frames, f))
-
-    filename = dir_frames+"/output%t.jpg"
+    
+    date_str: str = date.today().strftime("%Y.%m.%d")
+    filename = dir_frames+"/"+ date_str + ".%t.jpg"
     return subprocess.Popen(['ffmpeg', '-r', '30', '-f', 'avfoundation', '-i', str(device_index), '-t', duration, "-f", "image2", filename])
 
 def is_zoom_meeting_active() -> bool:
