@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import List
 
 from utilities import parser
-from analysis.parse.network_data import NetworkData
+from analysis.packet.network_data import NetworkData
 
 def map_frame_to_color(frame: bytes) -> str:
     colors = [color for color in mcolors.get_named_colors_mapping() if color[:4] == "xkcd"]
