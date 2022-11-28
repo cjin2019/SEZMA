@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Dict, Union
 
-from analysis.fua import FU_A
+from analysis.parse.fua import FU_A
 
 @dataclass
 class NALHeader:

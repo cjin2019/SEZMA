@@ -2,11 +2,11 @@ from typing import Union
 from scapy.layers.inet import IP, UDP
 from scapy.all import Packet
 
-from analysis.packet_constants import contains_value, ZoomMediaWrapper, RTPWrapper
-from analysis.packet_time import PacketTime
-from analysis.avc_3d_header import AVC3dExtension
-from analysis.mvc_header import MVCExtension
-from analysis.rtp import RTP
+from analysis.parse.packet_constants import contains_value, ZoomMediaWrapper, RTPWrapper
+from analysis.parse.packet_time import PacketTime
+from analysis.parse.avc_3d_header import AVC3dExtension
+from analysis.parse.mvc_header import MVCExtension
+from analysis.parse.rtp import RTP
 
 
 """

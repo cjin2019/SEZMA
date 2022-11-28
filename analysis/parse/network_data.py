@@ -2,8 +2,8 @@ from typing import List, Dict
 from scapy.all import PacketList, get_if_addr, rdpcap, conf
 from scapy.layers.inet import IP, UDP
 
-from analysis.udp_packet import UDPPacket
-from analysis.packet_constants import ZoomMediaWrapper, RTPWrapper
+from analysis.parse.udp_packet import UDPPacket
+from analysis.parse.packet_constants import ZoomMediaWrapper, RTPWrapper
 from utilities import *
 
 """
@@ -17,12 +17,12 @@ class NetworkData:
         self.udp_packets = self.get_packets_from_other_zoom_server()
 
     
-    def get_packets_from_other_zoom_server(self) -> List[UDPPacket]:
+    def get_packets_from_other_zoom_server(self) -> List["UDPPacket"]:
         """
         Gets the video UDP packets from other server. This can either be zoom server
         or direct communication with P2P
         """
-        udp_packets: List[UDPPacket] = []
+        udp_packets: List["UDPPacket"] = []
         for packet in self.packets:
             if IP in packet and UDP in packet and hasattr(packet[UDP], 'load') and packet[IP].dst == self.local_ip_addr:
                 udp_packet = UDPPacket(packet)
@@ -32,7 +32,7 @@ class NetworkData:
         
         return udp_packets
     
-    def get_packets_per_frame(self) -> Dict[bytes, List[UDPPacket]]:
+    def get_packets_per_frame(self) -> Dict[bytes, List["UDPPacket"]]:
         """
         Returns a mapping of frame sequence number -> [sequence of time]
         """

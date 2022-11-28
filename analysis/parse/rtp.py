@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 from typing import Dict, Optional, Tuple, Type, Union
 
-from analysis.exceptions import PacketException
-from analysis.packet_constants import RTPWrapper, ExceptionCodes
-from analysis.nal import NAL
+from analysis.parse.exceptions import PacketException
+from analysis.parse.packet_constants import RTPWrapper, ExceptionCodes
+from analysis.parse.nal import NAL
 
 @dataclass
 class RTPHeader:
@@ -16,10 +16,11 @@ class RTPHeader:
     seq_num: int
     timestamp: bytes
     ssrc: bytes
+    extension_header: "RTPExtensionHeader"
     csrcs: Union[Tuple[bytes], Tuple[()]] = ()
     profile_specific_id: Optional[bytes] = None
     extension_header_len: Optional[int] = None
-    extension_header: Optional["RTPExtensionHeader"] = None
+    
 
     @classmethod
     def get_header(cls: Type["RTPHeader"], rtp_data: bytes) -> Tuple["RTPHeader", int]:
@@ -95,6 +96,9 @@ class RTPExtensionHeader:
     def __str__(self) -> str:
         return str(self.__data)
     
+    def __getitem__(self, id: int) -> Optional[bytes]:
+        return self.__data[id] if id in self.__data else None
+    
     @classmethod
     def create(cls, data: bytes) -> "RTPExtensionHeader":
         idx = 0
@@ -105,7 +109,7 @@ class RTPExtensionHeader:
 
             if id == 0:
                 break
-            
+
             length: int = (header & 15) + 1
 
             idx += 1
