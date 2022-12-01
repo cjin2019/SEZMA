@@ -72,10 +72,10 @@ def packet_to_frame():
             packet_time = last_packet.time
             diff = frame_time.subtract(packet_time)
 
-            if diff > 0.2:
+            if diff > 0.1:
                 packet_idx += 1
             else:
-                if 0.1 < diff and diff <= 0.2:
+                if 0.05 < diff and diff <= 0.1:
                     print(
                         diff,
                         frames[frame_idx].filename,
