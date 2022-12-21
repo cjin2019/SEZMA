@@ -1,11 +1,11 @@
 {
     "network_capture_config": {
-        "duration_seconds": 20,
-        "output_file": "/Users/carolinejin/Documents/meng_project/data/phone_ml_11_13_2022_1.pcap"
+        "duration_seconds": 10,
+        "output_file": "/Users/carolinejin/Documents/meng_project/data/home_phone_test.pcap"
     },
     "frame_capture_config": {
         "device_index": 1,
-        "duration_seconds": 20,
-        "output_frame_dir": "/Users/carolinejin/Documents/meng_project/data/frames_phone_ml_11_13_2022_1"
+        "duration_seconds": 10,
+        "output_frame_dir": "/Users/carolinejin/Documents/meng_project/data/home_phone_test"
     }
 }

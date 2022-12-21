@@ -30,7 +30,7 @@ if __name__ == "__main__":
         network_data: NetworkData = NetworkData(args_tcpdump["output_file"])
         frame_to_size = defaultdict(lambda: 0)
         sizes: List[int] = []
-        times: List[PacketTime] = []
+        times: List[float] = []
 
         for packet in network_data.udp_packets:
 
@@ -42,7 +42,7 @@ if __name__ == "__main__":
                     if rtp_layer.header.payload_type == RTPWrapper.VIDEO:
                         fu_a = nal_layer.get_next_layer()
                         sizes.append(len(fu_a.payload))
-                        times.append(packet.time)
+                        times.append(packet.time.get_unix_time())
                         arr_num: List[int] = [
                             val for val in rtp_layer.header.extension_header[3]
                         ]
@@ -54,8 +54,8 @@ if __name__ == "__main__":
                         #     )
 
                         frame_to_size[packet.get_frame()] += len(fu_a.payload)
-                except PacketException:
-                    print(packet.get_frame())
+                except Exception as e:
+                    print(e)
         
         SMALL_SIZE = 100
         MEDIUM_SIZE = 200
@@ -69,9 +69,10 @@ if __name__ == "__main__":
         plt.rc("legend", fontsize=SMALL_SIZE)  # legend fontsize
         plt.rc("figure", titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
-        fig, ax = plt.subplots(figsize=(160, 80))
+        fig, ax = plt.subplots(figsize=(240, 80))
 
         size_np: np.ndarray = np.array(sizes)
+        times_np: np.ndarray = np.array(times)
         peaks, _ = find_peaks(size_np)
         prominences = peak_prominences(size_np, peaks)[0]
         min_prominence = np.percentile(prominences, 80)
@@ -79,8 +80,8 @@ if __name__ == "__main__":
         peaks, _ = find_peaks(size_np, prominence=(min_prominence, None))
         for idx in peaks:
             print(f"time = {times[idx]}")
-        ax.plot(list(range(size_np.size)), size_np, color = 'blue', linestyle = 'solid', marker='.', markersize=50)
-        ax.plot(peaks, size_np[peaks], color = 'red', linestyle = 'None', marker='x', markersize=50, markeredgewidth=10)
+        ax.plot(times_np, size_np, color = 'blue', linestyle = 'solid', marker='.', markersize=50)
+        ax.plot(times_np[peaks], size_np[peaks], color = 'red', linestyle = 'None', marker='x', markersize=50, markeredgewidth=10)
         ax.set_title("Timeline of Packet Sizes Sent")
         ax.set_xlabel("Order Received")
         ax.set_ylabel("Packet Size (bytes)")

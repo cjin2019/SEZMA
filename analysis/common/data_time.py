@@ -22,3 +22,6 @@ class DataTime(ABC):
         )
         sec_microseconds: float = (self.microseconds - other.microseconds) / 10**6
         return sec_second_precision + sec_microseconds
+    
+    def get_unix_time(self) -> float:
+        return time.mktime(self.second_precision) + self.microseconds / 10**6

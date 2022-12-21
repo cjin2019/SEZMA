@@ -37,7 +37,8 @@ class NetworkData:
                 ):  # helps determine if the packet is at least a zoom packet
                     # if udp_packet.packet_src == "10.29.45.121":
                     udp_packets.append(udp_packet)
-
+        
+        print(len(udp_packets))
         return udp_packets
 
     def get_packets_per_frame(self) -> Dict[bytes, List["UDPPacket"]]:

@@ -15,12 +15,17 @@ class ZoomMediaWrapper(IntEnum):
 class RTPWrapper(IntEnum):
     VIDEO = 98
     FEC = 110
-    UNKNOWN = 0
+    # UNKNOWN = 0
+    # UNKNOWN2 = 37
+    # UNKNOWN3 = 75
+    # UNKNOWN4 = 33
+    # UNKNOWN5 = 25
 
 
 class ExceptionCodes(Enum):
     INVALID_RTP_VERSION = "Invalid RTP Version"
     FU_A_NOT_RESERVED = "FU-A Not Reserved"
+    UNSUPPORTED_RTP_TYPE = "Unsupported RTP Type"
 
 
 def contains_value(cls: Type[IntEnum], val: int):

@@ -2,7 +2,7 @@ from dataclasses import dataclass
 from typing import Dict, Optional, Tuple, Type, Union
 
 from analysis.packet.exceptions import PacketException
-from analysis.packet.packet_constants import RTPWrapper, ExceptionCodes
+from analysis.packet.packet_constants import ExceptionCodes, RTPWrapper, contains_value
 from analysis.packet.nal import NAL
 
 
@@ -40,7 +40,10 @@ class RTPHeader:
 
         oct2: int = rtp_data[1]
         marker: int = oct2 >> 7
-        payload_type: "RTPWrapper" = RTPWrapper(oct2 & 127)
+        payload_type_val: int = oct2 & 127
+        if not contains_value(RTPWrapper, payload_type_val):
+            raise PacketException(ExceptionCodes.UNSUPPORTED_RTP_TYPE)
+        payload_type: "RTPWrapper" = RTPWrapper(payload_type_val)
 
         seq_num: int = int.from_bytes(rtp_data[2:4], "big")
         timestamp: bytes = rtp_data[4:8]
