@@ -7,18 +7,18 @@ Only compatible for macOS
 
 ### Packages
 
-#### FFmpeg 
+<!-- #### FFmpeg (Might not need it if doing screencapture command instead)
 1. `git clone git@github.com:FFmpeg/FFmpeg.git`.
 2. Before, installing add the following changes from `0001-added-milliseconds-to-filename.patch`.
 3. `cd FFmpeg`: enter FFmpeg library to install
 4. Follow installation from `ffmpeg` library: [link](https://github.com/FFmpeg/FFmpeg/blob/master/INSTALL.md). 
     1. To enable `libfontconfig`, install package libfontconfig1-dev
-    2. Follow `./configure --help` to get some of the enabled extensions. In order to get drawtext filter to work, run `./configure --enable-libfreetype --enable-libfontconfig`. 
+    2. Follow `./configure --help` to get some of the enabled extensions. In order to get drawtext filter to work, run `./configure --enable-libfreetype --enable-libfontconfig`.  -->
 
 #### tcpdump
 1. Enable `sudo` cmd without having to input password. Follow this [blog](http://www.linuxtechnotes.com/2015/10/how-to-give-sudo-access-to-user-run.html) 
 
-#### Python 3.8+.
+#### Python 3.11+.
 1. Set up a virtual environment inside `videonetworkapp` directory using `python3 -m venv venv`
 2. Activate the virtual environment with `source /path/to/venv/bin/activate`. Following python packages are installed inside the virtual environment, make sure your virtual environment is activated.
 

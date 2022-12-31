@@ -50,7 +50,7 @@ if __name__ == "__main__":
                         extension_header_vals.add((arr_num[0], arr_num[1]))
 
                         print(
-                            f"packet_src {packet.packet_src}, timestamp {packet.time}, frame {packet.get_frame()}, arr_nums {arr_num}, num_packets = {packet.get_number_packets_per_frame()}, fu_a payload = {len(fu_a.payload)}"
+                            f"packet_src {packet.packet_src}, packet_dst {packet.packet_dst}, timestamp {packet.time}, frame {packet.get_frame()}, arr_nums {arr_num}, num_packets = {packet.get_number_packets_per_frame()}, fu_a payload = {len(fu_a.payload)}"
                         )
 
                         frame_to_size[packet.get_frame()] += len(fu_a.payload)
