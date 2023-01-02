@@ -158,12 +158,10 @@ def capture_screen(window_id: int, timeout_sec: int, dir_frames: str) -> subproc
         for f in os.listdir(dir_frames):
             os.remove(os.path.join(dir_frames, f))
     
-    sh_file_path: str = os.path.join(
-        os.path.dirname(__file__), "screencapture.sh"
+    swift_file_path: str = os.path.join(
+        os.path.dirname(__file__), "zoom_get_frames.swift"
     )
-    duration_str: str = str(timeout_sec) + "s"
-    dir_str = dir_frames + "/"
-    return subprocess.Popen(["timeout", duration_str, "sh", sh_file_path, str(window_id), dir_str])
+    return subprocess.Popen(["swift", swift_file_path, str(window_id), dir_frames, str(timeout_sec)])
 
 def get_zoom_window_id() -> int:
     swift_file_path: str = os.path.join(
