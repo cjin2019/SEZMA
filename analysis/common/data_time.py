@@ -1,5 +1,7 @@
-from abc import ABC, abstractmethod
 import time
+
+from abc import ABC, abstractmethod
+from datetime import datetime
 
 
 class DataTime(ABC):
@@ -25,3 +27,8 @@ class DataTime(ABC):
     
     def get_unix_time(self) -> float:
         return time.mktime(self.second_precision) + self.microseconds / 10**6
+    
+    def get_datetime(self) -> datetime:
+        tm = self.second_precision
+        microseconds = self.microseconds
+        return datetime(tm.tm_year, tm.tm_mon, tm.tm_mday, tm.tm_hour, tm.tm_min, tm.tm_sec, microseconds)

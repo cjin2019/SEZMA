@@ -21,6 +21,10 @@ class FrameTime(DataTime):
     @property
     def microseconds(self) -> int:
         return self.__microseconds
+    
+    @property
+    def unix_time(self) -> float:
+        return time.mktime(self.second_precision) + self.microseconds / 10**6
 
     def __str__(self) -> str:
         return time.strftime(

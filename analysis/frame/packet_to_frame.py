@@ -1,7 +1,9 @@
 import json
-from pathlib import Path
 import os
+from brisque import BRISQUE
 from collections import defaultdict
+from matplotlib import image as plt_img
+from pathlib import Path
 from typing import Dict, List, Tuple
 
 from utilities import parser
@@ -63,32 +65,67 @@ def packet_to_frame():
         frames: List["Frame"] = parse_frames_from_filenames(
             args_ffmpeg["output_frame_dir"]
         )
+        image_dir: str = args_ffmpeg["output_frame_dir"]
+
+        brisque_scorer = BRISQUE()
 
         packet_idx: int = 0
         frame_idx: int = 0
         while packet_idx < len(packet_frame_seq) and frame_idx < len(frames):
-            frame_time = frames[frame_idx].time
+            frame_num = packet_frame_seq[packet_idx]
+            frame_time: FrameTime = frames[frame_idx].time
+            last_packet = frame_to_packets[frame_num][-1]
+            packet_time = last_packet.time
+            
+            expected_num_packets: int = last_packet.get_number_packets_per_frame()
+            actual_num_packets: int = len(frame_to_packets[frame_num])
+
+            img = plt_img.imread(image_dir + "/" + frames[frame_idx].filename)
+            brisque_score = brisque_scorer.score(img)
+
+            print(f"frame_time {frame_time}, packet_time {packet_time}, brisque score {brisque_score}, expected num {expected_num_packets}, actual {actual_num_packets}")
+            
+            print(last_packet.get_packet_size())
+
+            packet_idx += 1
+            frame_idx += 1
+        
+        while packet_idx < len(packet_frame_seq):
             last_packet = frame_to_packets[packet_frame_seq[packet_idx]][-1]
             packet_time = last_packet.time
-            diff = frame_time.subtract(packet_time)
+            print(f"packet_time {packet_time}")
+            packet_idx += 1
+        
+        while frame_idx < len(frames):
+            frame_time: FrameTime = frames[frame_idx].time
+            img = plt_img.imread(image_dir + "/" + frames[frame_idx].filename)
+            brisque_score = brisque_scorer.score(img)
+            print(f"frame_time {frame_time}, score {brisque_score}")
+            frame_idx += 1
+            
+        # while packet_idx < len(packet_frame_seq) and frame_idx < len(frames):
+        #     frame_time = frames[frame_idx].time
+        #     last_packet = frame_to_packets[packet_frame_seq[packet_idx]][-1]
+        #     packet_time = last_packet.time
+        #     diff = frame_time.subtract(packet_time)
 
-            if diff > 0.1:
-                packet_idx += 1
-            else:
-                if 0.05 < diff and diff <= 0.1:
-                    print(
-                        diff,
-                        frames[frame_idx].filename,
-                        packet_time,
-                        len(
-                            last_packet
-                            .get_next_layer()
-                            .get_next_layer()
-                            .get_next_layer()
-                            .payload
-                        ),
-                    )
-                frame_idx += 1
+        #     if diff > 0.1:
+        #         packet_idx += 1
+        #     else:
+        #         if 0.05 < diff and diff <= 0.1:
+        #             print(
+        #                 diff,
+        #                 frames[frame_idx].filename,
+        #                 packet_time,
+        #                 len(
+        #                     last_packet
+        #                     .get_next_layer()
+        #                     .get_next_layer()
+        #                     .get_next_layer()
+        #                     .payload
+        #                 ),
+        #             )
+        #         frame_idx += 1
 
 
 if __name__ == "__main__":

@@ -1,1 +1,1 @@
-__all__ = ["packet", "frame", "common"]
+__all__ = ["packet", "frame", "common", "metrics"]

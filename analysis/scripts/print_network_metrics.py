@@ -50,11 +50,15 @@ if __name__ == "__main__":
                         extension_header_vals.add((arr_num[0], arr_num[1]))
 
                         print(
-                            f"packet_src {packet.packet_src}, packet_dst {packet.packet_dst}, timestamp {packet.time}, frame {packet.get_frame()}, arr_nums {arr_num}, num_packets = {packet.get_number_packets_per_frame()}, fu_a payload = {len(fu_a.payload)}"
+                            f"VID packet_src {packet.packet_src}, packet_dst {packet.packet_dst}, port {packet.packet_sport}, timestamp {packet.time}, frame {int.from_bytes(packet.get_frame(), 'big')}, num_packets = {packet.get_number_packets_per_frame()}"
                         )
 
                         frame_to_size[packet.get_frame()] += len(fu_a.payload)
+                    else:
+                        print(
+                            f"FEC packet_src {packet.packet_src}, packet_dst {packet.packet_dst}, port {packet.packet_sport}, timestamp {packet.time}, frame {int.from_bytes(packet.get_frame(), 'big')},  num_packets = {packet.get_number_packets_per_frame()}"
+                        )
                 except PacketException:
-                    print(packet.get_frame())
+                    pass
 
         print(extension_header_vals)

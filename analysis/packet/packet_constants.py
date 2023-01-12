@@ -26,6 +26,7 @@ class ExceptionCodes(Enum):
     INVALID_RTP_VERSION = "Invalid RTP Version"
     FU_A_NOT_RESERVED = "FU-A Not Reserved"
     UNSUPPORTED_RTP_TYPE = "Unsupported RTP Type"
+    NOT_ENOUGH_RTP_DATA = "Not enough RTP data"
 
 
 def contains_value(cls: Type[IntEnum], val: int):

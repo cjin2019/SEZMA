@@ -26,6 +26,8 @@ if __name__ == "__main__":
         brisque_scorer = BRISQUE()
 
         min_val, max_val, sum_val, count_val = float('inf'), -1, 0, 0
+
+        min_filename, max_filename = "", ""
         for file in os.listdir(args_frames["output_frame_dir"]):
             img = plt_img.imread(frame_dir + "/" + file)
 
@@ -36,4 +38,19 @@ if __name__ == "__main__":
             count_val += 1
         
             mean_val = sum_val / count_val
-            print(f"min = {min_val}, max = {max_val}, mean = {mean_val}")
+
+            if curr_score == max_val:
+                max_filename = frame_dir + "/" + file
+            if curr_score == min_val:
+                min_filename = frame_dir + "/" + file
+            
+            filename = frame_dir + "/" + file
+            print(f"filename = {filename} curr score = {curr_score}")
+            # if count_val % 100 == 0:
+            #     print(f"Count = {count_val}")
+            #     print(f"file {max_filename} bad score = {max_val}, file {min_filename} good score = {min_val}")
+        
+        print("FINAL----")
+        print(f"file {max_filename} bad score = {max_val}, file {min_filename} good score = {min_val}")
+            # print(f"min = {min_val}, max = {max_val}, mean = {mean_val}")
+        

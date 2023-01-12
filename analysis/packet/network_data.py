@@ -4,6 +4,7 @@ from scapy.layers.inet import IP, UDP
 
 from analysis.packet.udp_packet import UDPPacket
 from analysis.packet.packet_constants import ZoomMediaWrapper, RTPWrapper
+from analysis.packet.exceptions import PacketException
 from utilities import *
 
 """
@@ -50,13 +51,16 @@ class NetworkData:
 
         output = {}
         for packet in self.udp_packets:
-            if (
-                packet.get_media_type() == ZoomMediaWrapper.RTP_VIDEO
-                and packet.get_next_layer().header.payload_type == RTPWrapper.VIDEO
-            ):
-                curr_frame = packet.get_frame()
-                if curr_frame not in output:
-                    output[curr_frame] = []
-                output[curr_frame].append(packet)
+            try:
+                if (
+                    packet.get_media_type() == ZoomMediaWrapper.RTP_VIDEO
+                    and packet.get_next_layer().header.payload_type == RTPWrapper.VIDEO
+                ):
+                    curr_frame = packet.get_frame()
+                    if curr_frame not in output:
+                        output[curr_frame] = []
+                    output[curr_frame].append(packet)
+            except PacketException as e:
+                print(e)
 
         return output

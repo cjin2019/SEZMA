@@ -29,6 +29,8 @@ class RTPHeader:
 
         Returns RTPHeader and the starting index of the payload
         """
+        if len(rtp_data) == 0:
+            raise PacketException(ExceptionCodes.NOT_ENOUGH_RTP_DATA)
         oct1: int = rtp_data[0]
 
         version: int = oct1 >> 6

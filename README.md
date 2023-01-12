@@ -18,7 +18,7 @@ Only compatible for macOS
 #### tcpdump
 1. Enable `sudo` cmd without having to input password. Follow this [blog](http://www.linuxtechnotes.com/2015/10/how-to-give-sudo-access-to-user-run.html) 
 
-#### Python 3.11+.
+#### Python >=3.8 <=3.10.
 1. Set up a virtual environment inside `videonetworkapp` directory using `python3 -m venv venv`
 2. Activate the virtual environment with `source /path/to/venv/bin/activate`. Following python packages are installed inside the virtual environment, make sure your virtual environment is activated.
 
