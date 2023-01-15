@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import Dict, Union
 
-from analysis.packet.fua import FU_A
+from app.analysis.packet.fua import FU_A
 
 
 @dataclass

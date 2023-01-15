@@ -20,10 +20,6 @@ if __name__ == "__main__":
 
     with config_file.open() as f:
         args = json.load(f)
-        args_tcpdump = args["network_capture_config"]
-        parser.check_process_inputs(
-            args_tcpdump, {"output_file": str, "duration_seconds": int}
-        )
 
         args_frames = args["frame_capture_config"]
         parser.check_process_inputs(
@@ -34,7 +30,7 @@ if __name__ == "__main__":
         # brisque_scorer = BRISQUE()
         count = 0
         every_nth = 1
-        scores: Dict["MetricType", List[float]] = {metric_type: [] for metric_type in MetricType}
+        # scores: Dict["MetricType", List[float]] = {MetricType.BRISQUE: [], MetricType.NIQE: [], MetricType.PIQE: [], MetricType.LAPLACIAN: []}
         times: List[datetime] = []
 
         img_metrics = ImageMetrics()
@@ -44,38 +40,29 @@ if __name__ == "__main__":
             os.makedirs(graph_dir)
 
         # open the file in the write mode
-        image_score_data_file = open(graph_dir + "/image_score_data.csv", 'w')
+        image_score_data_file = open(graph_dir + "/image_score_data.csv", 'r')
 
-        # create the csv writer
-        writer = csv.writer(image_score_data_file)
+        # create the csv reader
+        reader = csv.reader(image_score_data_file)
 
         # write a row to the csv file
-        writer.writerow(["filename", "time"] + [metric_type.value for metric_type in MetricType])
-
-        start_time = time.time()
-        for frame in parse_frames_from_filenames(frame_dir):
-            if count % every_nth == 0:
-
-                img_filename = frame_dir + "/" + frame.filename
-                img = cv2.imread(img_filename)
-
-                for metric_type in MetricType:
-                    scores[metric_type].append(img_metrics.get_no_ref_score(img, metric_type))
-                times.append(frame.time.get_datetime())
-
-                writer.writerow([img_filename, frame.time.get_datetime()] + [scores[metric_type][-1] for metric_type in MetricType])
-
-                
-            count += 1
-            print(f"{img_filename} pique {scores[MetricType.PIQE][-1]} laplacian {scores[MetricType.LAPLACIAN][-1]}")
-            # if count % 100 == 0:
-            #     print(count)
-        
-        end_time = time.time()
-        print(end_time - start_time)
+        col_names = next(reader)
+        data = {col_name: [] for col_name in col_names}
+        metric_type_values = [metric_type.value for metric_type in MetricType]
+        for row in reader:
+            for row_idx, col_name in enumerate(col_names):
+                if col_name == "time":
+                    # 2023-01-08 14:12:01.871000
+                    if row[row_idx].find(".") == -1:
+                        row[row_idx] += "." + "0" * 6
+                    data[col_name].append(datetime.strptime(row[row_idx], "%Y-%m-%d %H:%M:%S.%f"))
+                elif col_name in metric_type_values:
+                    data[col_name].append(float(row[row_idx]))
+                else:
+                    data[col_name].append(row[row_idx])
         
         image_score_data_file.close()
-        SMALL_SIZE = 100
+        SMALL_SIZE = 150
         MEDIUM_SIZE = 200
         BIGGER_SIZE = 300
 
@@ -87,18 +74,17 @@ if __name__ == "__main__":
         plt.rc("legend", fontsize=SMALL_SIZE)  # legend fontsize
         plt.rc("figure", titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
-        fig, ax = plt.subplots(len(MetricType), 1, figsize=(200, 100))
+        fig, ax = plt.subplots(4, 1, figsize=(200, 100))
         fig.tight_layout(pad=5.0)
 
         for row_idx, metric_type in enumerate(MetricType):
             ax[row_idx].grid(True, color='r')
-            ax[row_idx].plot_date(times, scores[metric_type], ms=30)
-            ax[row_idx].set_title("Timeline of Frame Score")
-            ax[row_idx].set_xlabel("Unix Time")
-            ax[row_idx].set_ylabel(f"{metric_type.value} Score")
+            ax[row_idx].plot_date(data["time"], data[metric_type.value], ms=30)
+            ax[row_idx].set_xlabel("Time")
+            ax[row_idx].set_ylabel(f"{metric_type.value}")
 
         image_filename = (
-            graph_dir + "/" + "frame_timeline_2.png"
+            graph_dir + "/" + "frame_timeline.png"
         )
         fig.savefig(image_filename)
         

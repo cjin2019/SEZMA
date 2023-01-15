@@ -1,7 +1,7 @@
 import time
 from typing import Type
 
-from analysis.common.data_time import DataTime
+from app.analysis.common.data_time import DataTime
 
 
 class FrameTime(DataTime):

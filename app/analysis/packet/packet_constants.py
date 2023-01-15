@@ -15,11 +15,7 @@ class ZoomMediaWrapper(IntEnum):
 class RTPWrapper(IntEnum):
     VIDEO = 98
     FEC = 110
-    # UNKNOWN = 0
-    # UNKNOWN2 = 37
-    # UNKNOWN3 = 75
-    # UNKNOWN4 = 33
-    # UNKNOWN5 = 25
+    INVALID = -1
 
 
 class ExceptionCodes(Enum):

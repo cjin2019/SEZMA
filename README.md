@@ -18,7 +18,7 @@ Only compatible for macOS
 #### tcpdump
 1. Enable `sudo` cmd without having to input password. Follow this [blog](http://www.linuxtechnotes.com/2015/10/how-to-give-sudo-access-to-user-run.html) 
 
-#### Python >=3.8 <=3.10.
+#### Python >=3.8 <=3.11.
 1. Set up a virtual environment inside `videonetworkapp` directory using `python3 -m venv venv`
 2. Activate the virtual environment with `source /path/to/venv/bin/activate`. Following python packages are installed inside the virtual environment, make sure your virtual environment is activated.
 
@@ -35,20 +35,22 @@ Only compatible for macOS
 
 ##### videonetworkapp
 1. Make sure your virtual environment is activated (`source /path/to/env/bin/activate`)
-2. Inside `videonetworkapp/`, run `python3 -m pip install -e .`
+<!-- 2. Inside `videonetworkapp/`, run `python3 -m pip install -e .` -->
 
 ### Commands to Run
 
 #### Set up configuration
 1. Edit `config.json` file to save to the data to appropriate location and run the screen capture and ffmpeg command for however long you like
-2. To get the appropriate device index, run `ffmpeg -f avfoundation -list_devices true -i ""`. Choose the number in `[]` that correspond to screen capture for video
+<!-- 2. To get the appropriate device index, run `ffmpeg -f avfoundation -list_devices true -i ""`. Choose the number in `[]` that correspond to screen capture for video -->
 
-#### Capture Zoom Screen
+#### Run app end-to-end
+1. Run `python3 /path/to/videonetworkapp/main.py` to capture data and produce graphs of the data 
+<!-- #### Capture Zoom Screen
 1. Activate virtual environment with `source /path/to/env/bin/activate`
 2. `cd videonetworkapp` 
-3. `python3 capture/tcpdump_cmd.py`
+3. `python3 capture/tcpdump_cmd.py` -->
 
 #### FAQ
-1. What if you run into `ERROR: fontconfig not found using pkg-config` when running `./configure --enable-libfreetype --enable-libfontconfig`? 
-Make sure `fontconfig` and `pkg-config` is installed. You can install through `brew install fontconfig pkg-config`
+<!-- 1. What if you run into `ERROR: fontconfig not found using pkg-config` when running `./configure --enable-libfreetype --enable-libfontconfig`? 
+Make sure `fontconfig` and `pkg-config` is installed. You can install through `brew install fontconfig pkg-config` -->
 

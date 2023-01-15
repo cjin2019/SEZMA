@@ -2,10 +2,10 @@ from typing import List, Dict
 from scapy.all import PacketList, get_if_addr, rdpcap, conf
 from scapy.layers.inet import IP, UDP
 
-from analysis.packet.udp_packet import UDPPacket
-from analysis.packet.packet_constants import ZoomMediaWrapper, RTPWrapper
-from analysis.packet.exceptions import PacketException
-from utilities import *
+from app.analysis.packet.udp_packet import UDPPacket
+from app.analysis.packet.packet_constants import ZoomMediaWrapper, RTPWrapper
+from app.analysis.packet.exceptions import PacketException
+from app.utilities import *
 
 """
 NetworkData only supports parsing UDP packets
@@ -39,12 +39,11 @@ class NetworkData:
                     # if udp_packet.packet_src == "10.29.45.121":
                     udp_packets.append(udp_packet)
         
-        print(len(udp_packets))
         return udp_packets
 
     def get_packets_per_frame(self) -> Dict[bytes, List["UDPPacket"]]:
         """
-        Returns a mapping of frame sequence number -> [sequence of time]
+        Returns a mapping of frame sequence number -> [sequence of packets]
         """
         if len(self.udp_packets) == 0:
             return {}
@@ -54,7 +53,7 @@ class NetworkData:
             try:
                 if (
                     packet.get_media_type() == ZoomMediaWrapper.RTP_VIDEO
-                    and packet.get_next_layer().header.payload_type == RTPWrapper.VIDEO
+                    # and packet.get_next_layer().header.payload_type == RTPWrapper.VIDEO
                 ):
                     curr_frame = packet.get_frame()
                     if curr_frame not in output:

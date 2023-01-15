@@ -2,15 +2,14 @@ from typing import Union
 from scapy.layers.inet import IP, UDP
 from scapy.all import Packet
 
-from analysis.packet.packet_constants import (
+from app.analysis.packet.packet_constants import (
     contains_value,
     ZoomMediaWrapper,
     RTPWrapper,
 )
-from analysis.packet.packet_time import PacketTime
-from analysis.packet.avc_3d_header import AVC3dExtension
-from analysis.packet.mvc_header import MVCExtension
-from analysis.packet.rtp import RTP
+from app.analysis.packet.exceptions import PacketException
+from app.analysis.packet.packet_time import PacketTime
+from app.analysis.packet.rtp import RTP
 
 
 """
@@ -48,6 +47,20 @@ class UDPPacket:
     @property
     def packet_sport(self) -> int:
         return self.__packet_sport
+    
+    @property
+    def rtp_load(self) -> bytes:
+        rtp_idx: int = 24 + self.__zoom_packet_offset
+
+        if self.__load[rtp_idx] != 144:
+            # try 26 or 28 byte offset
+            # print("changed offset")
+            if self.__load[28 + self.__zoom_packet_offset] == 144:
+                rtp_idx += 4
+            else:
+                rtp_idx += 2 
+
+        return self.__load[rtp_idx:]
 
     def get_frame(self) -> bytes:
         """
@@ -80,5 +93,11 @@ class UDPPacket:
         return len(self.__load)
 
     def get_next_layer(self) -> "RTP":
-        rtp_idx: int = 24 + self.__zoom_packet_offset
-        return RTP(self.__load[rtp_idx:])
+        return RTP(self.rtp_load)
+    
+    def get_rtp_type(self) -> "RTPWrapper":
+        try:
+            return self.get_next_layer().header.payload_type
+        except PacketException as e:
+            print(e)
+            return RTPWrapper.INVALID

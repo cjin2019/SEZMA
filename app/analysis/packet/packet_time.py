@@ -1,6 +1,6 @@
 import time
 
-from analysis.common.data_time import DataTime
+from app.analysis.common.data_time import DataTime
 
 """
 PacketTime represents the received time of the packet. This includes 

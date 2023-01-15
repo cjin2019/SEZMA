@@ -59,6 +59,7 @@ if __name__ == "__main__":
                             f"FEC packet_src {packet.packet_src}, packet_dst {packet.packet_dst}, port {packet.packet_sport}, timestamp {packet.time}, frame {int.from_bytes(packet.get_frame(), 'big')},  num_packets = {packet.get_number_packets_per_frame()}"
                         )
                 except PacketException:
+                    print("error")
                     pass
 
         print(extension_header_vals)

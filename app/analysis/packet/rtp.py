@@ -1,9 +1,9 @@
 from dataclasses import dataclass
 from typing import Dict, Optional, Tuple, Type, Union
 
-from analysis.packet.exceptions import PacketException
-from analysis.packet.packet_constants import ExceptionCodes, RTPWrapper, contains_value
-from analysis.packet.nal import NAL
+from app.analysis.packet.exceptions import PacketException
+from app.analysis.packet.packet_constants import ExceptionCodes, RTPWrapper, contains_value
+from app.analysis.packet.nal import NAL
 
 
 @dataclass
@@ -32,7 +32,6 @@ class RTPHeader:
         if len(rtp_data) == 0:
             raise PacketException(ExceptionCodes.NOT_ENOUGH_RTP_DATA)
         oct1: int = rtp_data[0]
-
         version: int = oct1 >> 6
         if version != 2:
             raise PacketException(ExceptionCodes.INVALID_RTP_VERSION)

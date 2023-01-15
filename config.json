@@ -1,11 +1,10 @@
 {
     "network_capture_config": {
         "duration_seconds": 5,
-        "output_file": "/Users/carolinejin/Documents/meng_project/data/test_screencapture2.pcap"
+        "output_file": "/Users/carolinejin/Documents/meng_project/data/test.pcap"
     },
     "frame_capture_config": {
-        "device_index": 1,
         "duration_seconds": 5,
-        "output_frame_dir": "/Users/carolinejin/Documents/meng_project/data/test_screencapture2"
+        "output_frame_dir": "/Users/carolinejin/Documents/meng_project/data/test"
     }
 }

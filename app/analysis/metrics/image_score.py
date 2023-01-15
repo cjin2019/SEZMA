@@ -5,15 +5,15 @@ import os
 from brisque import BRISQUE
 from enum import Enum
 
-from analysis.frame.frame import Frame
-from analysis.metrics.niqe import niqe
-from analysis.metrics.piqe import piqe
-from utilities import parser
+from app.analysis.frame.frame import Frame
+from app.analysis.metrics.niqe import niqe
+from app.analysis.metrics.piqe import piqe
+from app.utilities import parser
 
 class MetricType(Enum):
-    # BRISQUE = "BRISQUE"
+    BRISQUE = "BRISQUE"
     PIQE = "PIQE"
-    # NIQE = "NIQE"
+    NIQE = "NIQE"
     LAPLACIAN = "LAPLACIAN"
 
 class ImageMetrics:
@@ -38,10 +38,10 @@ class ImageMetrics:
         score = -1
         if mode == MetricType.PIQE:
             score, _, _, _ = piqe(im)
-        # elif mode == MetricType.NIQE:
-        #     score = niqe(im)
-        # elif mode == MetricType.BRISQUE:
-        #     score = self.BRISQUE.score(im)
+        elif mode == MetricType.NIQE:
+            score = niqe(im)
+        elif mode == MetricType.BRISQUE:
+            score = self.BRISQUE.score(im)
         else:
             return self.laplacian_blur(im)
         

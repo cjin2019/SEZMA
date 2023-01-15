@@ -4,4 +4,5 @@ numpy==1.24.0
 scipy==1.9.3
 matplotlib==3.6.2
 opencv-contrib-python==4.7.0.68
+brisque==0.0.15
 

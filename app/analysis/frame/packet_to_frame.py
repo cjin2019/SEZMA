@@ -6,14 +6,14 @@ from matplotlib import image as plt_img
 from pathlib import Path
 from typing import Dict, List, Tuple
 
-from utilities import parser
-from analysis.frame.frame import Frame
-from analysis.frame.frame_time import FrameTime
-from analysis.packet.exceptions import PacketException
-from analysis.packet.network_data import NetworkData
-from analysis.packet.packet_constants import RTPWrapper, ZoomMediaWrapper
-from analysis.packet.rtp import RTP
-from analysis.packet.udp_packet import UDPPacket
+from app.utilities import parser
+from app.analysis.frame.frame import Frame
+from app.analysis.frame.frame_time import FrameTime
+from app.analysis.packet.exceptions import PacketException
+from app.analysis.packet.network_data import NetworkData
+from app.analysis.packet.packet_constants import RTPWrapper, ZoomMediaWrapper
+from app.analysis.packet.rtp import RTP
+from app.analysis.packet.udp_packet import UDPPacket
 
 
 def parse_frames_from_filenames(dir: str) -> List["Frame"]:

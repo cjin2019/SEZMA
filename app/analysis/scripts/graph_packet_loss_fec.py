@@ -8,6 +8,7 @@ from typing import List
 
 from utilities import parser
 from analysis.packet.network_data import NetworkData
+from analysis.packet.packet_constants import RTPWrapper
 from analysis.packet.packet_time import PacketTime
 
 
@@ -41,35 +42,29 @@ if __name__ == "__main__":
 
         # get the time and size
         times: List[datetime] = []
+        num_fecs: List[int] = []
+        num_compared_to_expected: List[int] = []
         sizes: List[int] = []
-        frame_colors: List[str] = []
-
-        # get interpacket difference
-        # get time difference between packets of different frames
-        # get the number of packets per frame
-        time_withinpacket: List[float] = []
-        time_betweenpacket: List[float] = []
-        num_packets_per_frame: List[int] = []
-        time_packet_start: List[datetime] = []
 
         for frame in packets_per_frame:
-            num_packets: int = len(packets_per_frame[frame])
-            num_packets_per_frame.append(num_packets)
+            packets = [packet for packet in packets_per_frame[frame] if packet.get_rtp_type() != RTPWrapper.INVALID]
+            times.append(packets[-1].time.get_datetime())
+            if len(packets) != len(packets_per_frame[frame]):
+                print("There are invalid packets")
+            fecs = [packet for packet in packets if packet.get_rtp_type() == RTPWrapper.FEC]
+            vids = [packet for packet in packets if packet.get_rtp_type() == RTPWrapper.VIDEO]
+            num_fec = len(fecs)
+            num_vid = len(vids)
+            num_fecs.append(num_fec)
 
-            frame_color: str = map_frame_to_color(frame)
-            frame_colors += [frame_color] * num_packets
+            num_expected = packets[0].get_number_packets_per_frame()
+            compared_to_expected = num_expected - (num_fec + num_vid)
+            num_compared_to_expected.append(compared_to_expected)
 
-            frame_times = [packet.time.get_datetime() for packet in packets_per_frame[frame]]
-            time_packet_start.append(frame_times[0])
-            time_withinpacket.append((frame_times[-1] - frame_times[0]).total_seconds())
-            if len(times) > 0:
-                time_betweenpacket.append((frame_times[0] - times[-1]).total_seconds())
-            times += [packet.time.get_datetime() for packet in packets_per_frame[frame]]
+            fec_sizes = [packet.get_packet_size() for packet in fecs]
+            vid_sizes = [packet.get_packet_size() for packet in vids]
+            sizes.append(sum(vid_sizes) + sum(fec_sizes))
 
-            frame_sizes = [
-                packet.get_packet_size() for packet in packets_per_frame[frame]
-            ]
-            sizes += frame_sizes
 
         # start plotting
 
@@ -94,47 +89,35 @@ if __name__ == "__main__":
         fig_width = 200
         fig, ax = plt.subplots(figsize=(fig_width, 80))
 
-        ax.plot_date(times, sizes, ms=30)
+        ax.plot_date(times, num_fecs, ms=30)
         ax.grid(True, color='r')
-        ax.set_title("Timeline of Packets Sent per Frame")
-        ax.set_xlabel("Unix Time")
+        ax.set_title("Number of FEC Packets Per Frame")
+        ax.set_xlabel("Time of Last Packet Per Frame")
+        ax.set_ylabel("Number of FEC Packet")
+
+        image_filename = (
+            graph_dir + "/num_fecs.png"
+        )
+        fig.savefig(image_filename)
+
+        fig, ax = plt.subplots(figsize=(fig_width, 80))
+        ax.plot_date(times, num_compared_to_expected, ms=30)
+        ax.set_title("Difference between expected number of packets and packets received")
+        ax.set_xlabel("Time of Last Packet Per Frame")
+        ax.set_ylabel("Difference")
+
+        image_filename = (
+            graph_dir + "/num_packet_difference.png"
+        )
+        fig.savefig(image_filename)
+
+        fig, ax = plt.subplots(figsize=(fig_width, 80))
+        ax.plot_date(times, sizes, ms=30)
+        ax.set_title("Total Packet Size Per Frame")
+        ax.set_xlabel("Time of Last Packet Per Frame")
         ax.set_ylabel("Packet Size (bytes)")
 
         image_filename = (
-            graph_dir + "/timeline.png"
-        )
-        fig.savefig(image_filename)
-
-        fig, ax = plt.subplots(figsize=(fig_width, 80))
-        ax.plot_date(time_packet_start, time_withinpacket, ms=30)
-        ax.set_title("Time Difference Between First and Last Packet Per Frame")
-        ax.set_xlabel("Unix Time of First Packet Per Frame")
-        ax.set_ylabel("Duration of Time Within Packet (s)")
-
-        image_filename = (
-            graph_dir + "/within_frame.png"
-        )
-        fig.savefig(image_filename)
-
-        fig, ax = plt.subplots(figsize=(fig_width, 80))
-        ax.grid(True, color='r')
-        ax.plot_date(time_packet_start[1:], time_betweenpacket, ms=30)
-        ax.set_title("Time Difference Between Frames")
-        ax.set_xlabel("Unix Time of First Packet Per Frame")
-        ax.set_ylabel("Duration of Time Sent Between Frames (s)")
-
-        image_filename = (
-            graph_dir + "/between_frame.png"
-        )
-        fig.savefig(image_filename)
-
-        fig, ax = plt.subplots(figsize=(fig_width, 80))
-        ax.plot_date(time_packet_start, num_packets_per_frame, ms=30)
-        ax.set_title("Number of Packets Per Frame")
-        ax.set_xlabel("Unix Time of First Packet Per Frame")
-        ax.set_ylabel("Number of Packets Per Frame")
-
-        image_filename = (
-            graph_dir + "/num_packets.png"
+            graph_dir + "/total_frame_size.png"
         )
         fig.savefig(image_filename)

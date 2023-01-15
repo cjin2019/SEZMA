@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 
-from analysis.packet.exceptions import PacketException
-from analysis.packet.packet_constants import ExceptionCodes
+from app.analysis.packet.exceptions import PacketException
+from app.analysis.packet.packet_constants import ExceptionCodes
 
 
 @dataclass

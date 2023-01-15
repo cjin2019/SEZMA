@@ -1,4 +1,4 @@
-from analysis.packet.packet_constants import ExceptionCodes
+from app.analysis.packet.packet_constants import ExceptionCodes
 
 
 class PacketException(Exception):

@@ -6,7 +6,7 @@ import time
 from datetime import date, timedelta
 from pathlib import Path
 
-from utilities.parser import *
+from app.utilities.parser import *
 
 # these values are not too useful
 ZOOM_COUNT = (
@@ -177,9 +177,10 @@ def run_procceses():
     window_id = -1
     while window_id == -1:
         window_id = get_zoom_window_id()
+        # print(window_id)
 
     # start capturing data
-    config_dir = Path(__file__).parent.parent
+    config_dir = Path(__file__).parent.parent.parent
     config_file = config_dir / "config.json"
     with config_file.open() as f:
         args = json.load(f)
@@ -194,7 +195,7 @@ def run_procceses():
         args_ffmpeg = args["frame_capture_config"]
         check_process_inputs(
             args_ffmpeg,
-            {"device_index": int, "duration_seconds": int, "output_frame_dir": str},
+            {"duration_seconds": int, "output_frame_dir": str},
         )
 
         procs = [

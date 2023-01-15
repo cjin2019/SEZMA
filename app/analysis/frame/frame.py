@@ -1,4 +1,4 @@
-from analysis.frame.frame_time import FrameTime
+from app.analysis.frame.frame_time import FrameTime
 
 
 class Frame:

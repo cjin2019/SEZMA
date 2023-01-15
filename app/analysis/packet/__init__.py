@@ -3,7 +3,6 @@ __all__ = [
     "udp_packet",
     "packet_time",
     "packet_constants",
-    "avc_3d_header",
     "rtp",
     "nal",
     "fua",
