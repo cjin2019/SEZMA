@@ -21,17 +21,48 @@ Only compatible for macOS
 1. Enable `sudo` cmd without having to input password. Following steps are from this [blog](http://www.linuxtechnotes.com/2015/10/how-to-give-sudo-access-to-user-run.html) 
     1. Make a backup of `/etc/sudoers` file. (`cp /etc/sudoers /tmp/sudoers.date`)
     2. Edit the `/etc/sudoers` file. (`sudo visudo`)
-    3. Add the entrie under User specification section: `[USERNAME] ALL=(root) NOPASSWD: /usr/sbin/tcpdump` 
+    3. Add the entry under User specification section: `[USERNAME] ALL=(root) NOPASSWD: /usr/sbin/tcpdump` 
     4. Go out of visudo: Escape button then type `wq!`
-2. Test command: `sudo tcpdump`. It should output the current network stats. 
+2. Test command: `sudo tcpdump`. It should output the current network stats, like below
+```
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on eth0, link-type EN10MB (Ethernet), capture size 65535 bytes
+21:02:19.112502 IP test33.ntp > 199.30.140.74.ntp: NTPv4, Client, length 48
+21:02:19.113888 IP 216.239.35.0.ntp > test33.ntp: NTPv4, Server, length 48
+21:02:20.150347 IP test33.ntp > 216.239.35.0.ntp: NTPv4, Client, length 48
+21:02:20.150991 IP 216.239.35.0.ntp > test33.ntp: NTPv4, Server, length 48
+``` 
+3. **NOTE: This may have some security issues. You may want to comment Step 1.3 out when not using the app**
+
+#### Xcode Command Line Tools
+1. Enable to run `swift` on terminal. Following steps are from [here](https://apple.stackexchange.com/questions/254380/why-am-i-getting-an-invalid-active-developer-path-when-attempting-to-use-git-a)
+    1. Run `xcode-select --install` to install Xcode command line tools. You do not need Xcode; you can install only the command line.
+    2. If you are running into issues, run `sudo xcode-select --reset` then step 1.1.
+2. Test command: `swift`. It should output the following:
+```
+Welcome to Swift!
+
+Subcommands:
+
+  swift build      Build Swift packages
+  swift package    Create and work on packages
+  swift run        Run a program from a package
+  swift test       Run package tests
+  swift repl       Experiment with Swift code interactively
+
+  Use `swift --help` for descriptions of available options and flags.
+
+  Use `swift help <subcommand>` for more information about a subcommand.
+```
 
 #### Python >=3.8 <=3.11.
 1. Set up a virtual environment inside `videonetworkapp` directory using `python3 -m venv venv`
 2. Activate the virtual environment with `source [/PATH/TO/]venv/bin/activate`. Following python packages are installed inside the virtual environment, make sure your virtual environment is activated.
+3. If you want to have multiple Python versions, you can follow [this](https://stackoverflow.com/questions/36968425/how-can-i-install-multiple-versions-of-python-on-latest-os-x-and-use-them-in-par)
 
 ##### Install external packages
 1. Make sure your virtual environment is activated (`source [/PATH/TO/]venv/bin/activate`)
-2. `python3 -m pip install -r requirements.txt`
+2. Inside your virtual environment, run `python3 -m pip install -r requirements.txt`
 
 <!-- ##### setuptools 
 1. `pip3 install setuptools`

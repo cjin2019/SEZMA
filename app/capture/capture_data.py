@@ -164,10 +164,10 @@ def capture_screen(window_id: int, timeout_sec: int, dir_frames: str) -> subproc
     return subprocess.Popen(["swift", swift_file_path, str(window_id), dir_frames, str(timeout_sec)])
 
 def get_zoom_window_id() -> int:
-    swift_file_c_path: str = os.path.join(
-        os.path.dirname(__file__), "zoom_window_id"
+    swift_file_path: str = os.path.join(
+        os.path.dirname(__file__), "zoom_window_id.swift"
     )
-    swift_out = subprocess.check_output([swift_file_c_path]).splitlines()
+    swift_out = subprocess.check_output(["swift", swift_file_path]).splitlines()
     return int(swift_out[0])
 
 def run_procceses():
