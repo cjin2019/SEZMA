@@ -14,8 +14,8 @@ func saveCGIImages(windowIdParam: Int, imageDirectory: String, durationSeconds: 
         let time: TimeInterval = Date().timeIntervalSinceReferenceDate
         let image: CGImage = CGWindowListCreateImage(CGRectNull, CGWindowListOption.optionIncludingWindow, CGWindowID(windowIdParam), CGWindowImageOption.boundsIgnoreFraming)!
         let ciImage: CIImage = CIImage(cgImage: image)
-        let imageFilePath: String = "\(imageDirectory)/\(formatter.string(from: Date(timeIntervalSinceReferenceDate: time))).jpg"
-        try ciContext.writeJPEGRepresentation(of: ciImage, to: URL(filePath: imageFilePath), colorSpace: ciImage.colorSpace!)
+        let imageFilePath: String = "file://\(imageDirectory)/\(formatter.string(from: Date(timeIntervalSinceReferenceDate: time))).jpg"
+        try ciContext.writeJPEGRepresentation(of: ciImage, to: URL(string: imageFilePath)!, colorSpace: ciImage.colorSpace!)
         let time2: TimeInterval = Date().timeIntervalSinceReferenceDate
         if (timeBetweenFrame - (time2 - time) > 0){
             usleep(useconds_t(max(0, (timeBetweenFrame - (time2 - time)) * 1000000)))

@@ -9,10 +9,6 @@ func getZoomMeetingWindowId() -> Int{
 
     // print(windowInfoList)
     for info in windowInfoList! {
-
-        // if info["kCGWindowNumber"] == nil || info["kCGWindowOwnerName"] == nil || info["kCGWindowName"] == nil{
-        //     continue
-        // }
         
         if info["kCGWindowNumber"] != nil && info["kCGWindowOwnerName"] != nil && info["kCGWindowName"] != nil{
             let windowNum = info["kCGWindowNumber"] as! Int
@@ -24,8 +20,6 @@ func getZoomMeetingWindowId() -> Int{
             }
             // print("WindowNumber: \(windowNum), WindowOwnername: \(ownerName), WindowName: \(windowName)")
         }
-
-       
     }
 
     return -1

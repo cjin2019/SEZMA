@@ -55,6 +55,11 @@ Subcommands:
   Use `swift help <subcommand>` for more information about a subcommand.
 ```
 
+#### Screen Capture 
+1. You will need permissions to screen capture from Terminal. 
+    1. Go to Settings > Privacy & Security > Screen Recording. 
+    2. Add Terminal app
+
 #### Python >=3.8 <=3.11.
 1. Set up a virtual environment inside `videonetworkapp` directory using `python3 -m venv venv`
 2. Activate the virtual environment with `source [/PATH/TO/]venv/bin/activate`. Following python packages are installed inside the virtual environment, make sure your virtual environment is activated.
