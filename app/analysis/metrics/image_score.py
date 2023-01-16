@@ -2,7 +2,7 @@ import cv2
 import numpy as np
 import os
 
-from brisque import BRISQUE
+# from brisque import BRISQUE
 from enum import Enum
 
 from app.analysis.frame.frame import Frame
@@ -17,8 +17,9 @@ class MetricType(Enum):
     LAPLACIAN = "LAPLACIAN"
 
 class ImageMetrics:
-    def __init__(self):
-        self.BRISQUE = BRISQUE()
+    # def __init__(self):
+        
+        # self.BRISQUE = BRISQUE()
     def laplacian_blur(self, img, save_filename: str = None) -> float:
         """
         img: NDArray of shape (W, H) or (W, H, C) where C represents RGB

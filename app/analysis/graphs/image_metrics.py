@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import Dict, List
 
 from app.utilities import parser
-from app.analysis.frame.packet_to_frame import parse_frames_from_filenames
+from app.analysis.frame.frame import parse_frames_from_filenames
 from app.analysis.metrics.image_score import ImageMetrics, MetricType
 
 def create_graphs(args_frames: Dict, graph_dir) -> None:
