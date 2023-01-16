@@ -11,7 +11,7 @@ from app.analysis.metrics.piqe import piqe
 from app.utilities import parser
 
 class MetricType(Enum):
-    BRISQUE = "BRISQUE"
+    # BRISQUE = "BRISQUE"
     PIQE = "PIQE"
     NIQE = "NIQE"
     LAPLACIAN = "LAPLACIAN"
@@ -40,8 +40,8 @@ class ImageMetrics:
             score, _, _, _ = piqe(im)
         elif mode == MetricType.NIQE:
             score = niqe(im)
-        elif mode == MetricType.BRISQUE:
-            score = self.BRISQUE.score(im)
+        # elif mode == MetricType.BRISQUE:
+        #     score = self.BRISQUE.score(im)
         else:
             return self.laplacian_blur(im)
         

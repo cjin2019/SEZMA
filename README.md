@@ -40,11 +40,12 @@ Only compatible for macOS
 ### Commands to Run
 
 #### Set up configuration
-1. Edit `config.json` file to save to the data to appropriate location and run the screen capture and ffmpeg command for however long you like
+1. Edit `config.json` file to save to the data to appropriate location and run the screen capture for however long you like
 <!-- 2. To get the appropriate device index, run `ffmpeg -f avfoundation -list_devices true -i ""`. Choose the number in `[]` that correspond to screen capture for video -->
 
 #### Run app end-to-end
-1. Run `python3 /path/to/videonetworkapp/main.py` to capture data and produce graphs of the data 
+1. Start Zoom with one other person. 
+2. Once, you start up your Zoom call is ready, run `python3 /path/to/videonetworkapp/main.py` to capture data and produce graphs of the data 
 <!-- #### Capture Zoom Screen
 1. Activate virtual environment with `source /path/to/env/bin/activate`
 2. `cd videonetworkapp` 

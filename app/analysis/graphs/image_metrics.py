@@ -56,7 +56,7 @@ def create_graphs(args_frames: Dict, graph_dir) -> None:
     print(f"Time Run: {end_time - start_time}")
     
     image_score_data_file.close()
-    SMALL_SIZE = 100
+    SMALL_SIZE = 150
     MEDIUM_SIZE = 200
     BIGGER_SIZE = 300
 

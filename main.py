@@ -1,3 +1,4 @@
+import argparse
 import json
 import os
 from multiprocessing import Process
@@ -33,9 +34,17 @@ def create_graphs():
     graph_frame.create_graphs(args_frames, graph_dir)
 
 def run_app():
-    capture.run_procceses()
-    print("graph creation")
-    create_graphs()
+    parser = argparse.ArgumentParser()
+    parser.add_argument('-nc', '--NoCapture', help='default capture else no capture data',required=False)
+    parser.add_argument('-ng', '--NoGraph',  help='default create graphs else no graph creation', required=False)
+    args = parser.parse_args()
+
+    if args.NoCapture == None:
+        print("capturing data")
+        capture.run_procceses()
+    if args.NoGraph == None:
+        print("graph creation")
+        create_graphs()
 
 if __name__ == "__main__":
     run_app()
