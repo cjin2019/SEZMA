@@ -3,7 +3,7 @@
 ## Requirements
 
 ### OS
-Only compatible for macOS
+Only compatible for macOS 10.12+.
 
 ### Packages
 
@@ -35,7 +35,8 @@ listening on eth0, link-type EN10MB (Ethernet), capture size 65535 bytes
 3. **NOTE: This may have some security issues. You may want to comment Step 1.3 out when not using the app**
 
 #### Xcode Command Line Tools
-1. Enable to run `swift` on terminal. Following steps are from [here](https://apple.stackexchange.com/questions/254380/why-am-i-getting-an-invalid-active-developer-path-when-attempting-to-use-git-a)
+1. You must have an AppleID to install tool
+2. Enable to run `swift` on terminal. Following steps are from [here](https://apple.stackexchange.com/questions/254380/why-am-i-getting-an-invalid-active-developer-path-when-attempting-to-use-git-a)
     1. Run `xcode-select --install` to install Xcode command line tools. You do not need Xcode; you can install only the command line.
     2. If you are running into issues, run `sudo xcode-select --reset` then step 1.1.
 2. Test command: `swift`. It should output the following:
@@ -58,7 +59,8 @@ Subcommands:
 #### Screen Capture 
 1. You will need permissions to screen capture from Terminal. 
     1. Go to Settings > Privacy & Security > Screen Recording. 
-    2. Add Terminal app
+    2. Add Terminal to allowed applications.
+2. **NOTE: May be a security issue. Want to issue**
 
 #### Python >=3.8 <=3.11.
 1. Set up a virtual environment inside `videonetworkapp` directory using `python3 -m venv venv`

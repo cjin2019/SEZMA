@@ -10,13 +10,13 @@ from matplotlib import image as plt_img, pyplot as plt
 from pathlib import Path
 from typing import Dict, List
 
-from utilities import parser
-from analysis.frame.packet_to_frame import parse_frames_from_filenames
-from analysis.metrics.image_score import ImageMetrics, MetricType
-from analysis.metrics.piqe import piqe
+from app.utilities import parser
+from app.analysis.frame.frame import parse_frames_from_filenames
+from app.analysis.metrics.image_score import ImageMetrics, MetricType
+from app.analysis.metrics.piqe import piqe
 
 if __name__ == "__main__":
-    config_dir = Path(__file__).parent.parent.parent
+    config_dir = Path(__file__).parent
     config_file = config_dir / "config.json"
 
     with config_file.open() as f:
@@ -48,12 +48,21 @@ if __name__ == "__main__":
         print(bad_blurry_res[0], image_metric.laplacian_blur(cv2.imread(bad_image_blurry)))
         print(good_res2[0], image_metric.laplacian_blur(cv2.imread(good_image_2)))
 
-        cv2.imwrite("good_res_noticeable_artifact.jpg", good_res[1]* 255)
-        cv2.imwrite("bad_res_noticeable_artifact.jpg", bad_res[1]*255)
-        cv2.imwrite("bad_blurry_res_noticeable_artifact.jpg", bad_blurry_res[1] * 255)
-        cv2.imwrite("good_res_2_noticeable_artifact.jpg", good_res2[1] * 255)
+        image_dir = "/Users/carolinejin/Documents/meng_project/data/piqe_not_work"
+        if not os.path.exists(image_dir):
+            os.makedirs(image_dir)
+        
+        cv2.imwrite(image_dir + "/good_res_orig.jpg", cv2.imread(good_image_score_high))
+        cv2.imwrite(image_dir + "/bad_res_orig.jpg", cv2.imread(bad_image_score_low))
+        cv2.imwrite(image_dir + "/bad_blurry_res_orig.jpg", cv2.imread(bad_image_blurry))
+        cv2.imwrite(image_dir + "/good_res_2_orig.jpg", cv2.imread(good_image_2))
 
-        cv2.imwrite("good_res_noise_mask.jpg", good_res[2] * 255)
-        cv2.imwrite("bad_res_noise_mask.jpg", bad_res[2] * 255)
-        cv2.imwrite("bad_blurry_res_noise_mask.jpg", bad_blurry_res[2] * 255)
-        cv2.imwrite("good_res_2_noise_madk.jpg", good_res2[2] * 255)
+        cv2.imwrite(image_dir + "/good_res_noticeable_artifact.jpg", (good_res[1] > 0) * 255)
+        cv2.imwrite(image_dir + "/bad_res_noticeable_artifact.jpg", (bad_res[1] > 0)*255)
+        cv2.imwrite(image_dir + "/bad_blurry_res_noticeable_artifact.jpg", (bad_blurry_res[1] > 0) * 255)
+        cv2.imwrite(image_dir + "/good_res_2_noticeable_artifact.jpg", good_res2[1] * 255)
+
+        cv2.imwrite(image_dir + "/good_res_noise_mask.jpg", (good_res[2]>0) * 255)
+        cv2.imwrite(image_dir + "/bad_res_noise_mask.jpg", bad_res[2] * 255)
+        cv2.imwrite(image_dir + "/bad_blurry_res_noise_mask.jpg", bad_blurry_res[2] * 255)
+        cv2.imwrite(image_dir + "/good_res_2_noise_madk.jpg", good_res2[2] * 255)
