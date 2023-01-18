@@ -60,7 +60,7 @@ Subcommands:
 1. You will need permissions to screen capture from Terminal. 
     1. Go to Settings > Privacy & Security > Screen Recording. 
     2. Add Terminal to allowed applications.
-2. **NOTE: May be a security issue. Want to issue**
+2. **NOTE: May be a security issue. Remove terminal from allowed apps when done using**
 
 #### Python >=3.8 <=3.11.
 1. Set up a virtual environment inside `videonetworkapp` directory using `python3 -m venv venv`
