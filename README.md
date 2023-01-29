@@ -19,9 +19,9 @@ Only compatible for macOS 10.12+.
 
 #### tcpdump
 1. Enable `sudo` cmd without having to input password. Following steps are from this [blog](http://www.linuxtechnotes.com/2015/10/how-to-give-sudo-access-to-user-run.html) 
-    1. Make a backup of `/etc/sudoers` file. (`cp /etc/sudoers /tmp/sudoers.date`)
+    1. Make a backup of `/etc/sudoers` file. (`cp /etc/sudoers /tmp/sudoers_[MM_DD_YYYY]`**, replacing with the current date)
     2. Edit the `/etc/sudoers` file. (`sudo visudo`)
-    3. Add the entry under User specification section: `[USERNAME] ALL=(root) NOPASSWD: /usr/sbin/tcpdump` 
+    3. Add the entry under _User specification_ section: `[USERNAME] ALL=(root) NOPASSWD: /usr/sbin/tcpdump` 
     4. Go out of visudo: Escape button then type `wq!`
 2. Test command: `sudo tcpdump`. It should output the current network stats, like below
 ```
@@ -39,22 +39,7 @@ listening on eth0, link-type EN10MB (Ethernet), capture size 65535 bytes
 2. Enable to run `swift` on terminal. Following steps are from [here](https://apple.stackexchange.com/questions/254380/why-am-i-getting-an-invalid-active-developer-path-when-attempting-to-use-git-a)
     1. Run `xcode-select --install` to install Xcode command line tools. You do not need Xcode; you can install only the command line.
     2. If you are running into issues, run `sudo xcode-select --reset` then step 1.1.
-2. Test command: `swift`. It should output the following:
-```
-Welcome to Swift!
-
-Subcommands:
-
-  swift build      Build Swift packages
-  swift package    Create and work on packages
-  swift run        Run a program from a package
-  swift test       Run package tests
-  swift repl       Experiment with Swift code interactively
-
-  Use `swift --help` for descriptions of available options and flags.
-
-  Use `swift help <subcommand>` for more information about a subcommand.
-```
+2. Test command: `swift`. It should output a Welcome message. 
 
 #### Screen Capture 
 1. You will need permissions to screen capture from Terminal. 
