@@ -19,7 +19,7 @@ Only compatible for macOS 10.12+.
 
 #### tcpdump
 1. Enable `sudo` cmd without having to input password. Following steps are from this [blog](http://www.linuxtechnotes.com/2015/10/how-to-give-sudo-access-to-user-run.html) 
-    1. Make a backup of `/etc/sudoers` file. (`cp /etc/sudoers /tmp/sudoers_[MM_DD_YYYY]`**, replacing with the current date)
+    1. Make a backup of `/etc/sudoers` file. (`cp /etc/sudoers /tmp/sudoers_[MM_DD_YYYY]`, replacing with the current date)
     2. Edit the `/etc/sudoers` file. (`sudo visudo`)
     3. Add the entry under _User specification_ section: `[USERNAME] ALL=(root) NOPASSWD: /usr/sbin/tcpdump` 
     4. Go out of visudo: Escape button then type `wq!`
@@ -36,7 +36,7 @@ listening on eth0, link-type EN10MB (Ethernet), capture size 65535 bytes
 
 #### Xcode Command Line Tools
 1. You must have an AppleID to install tool
-2. Enable to run `swift` on terminal. Following steps are from [here](https://apple.stackexchange.com/questions/254380/why-am-i-getting-an-invalid-active-developer-path-when-attempting-to-use-git-a)
+2. Enable to run `swift` on terminal. Following steps are from [here](https://apple.stackexchange.com/a/254381)
     1. Run `xcode-select --install` to install Xcode command line tools. You do not need Xcode; you can install only the command line.
     2. If you are running into issues, run `sudo xcode-select --reset` then step 1.1.
 2. Test command: `swift`. It should output a Welcome message. 
