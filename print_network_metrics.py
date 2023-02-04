@@ -3,16 +3,16 @@ from collections import defaultdict
 from pathlib import Path
 from typing import Dict, List
 
-from utilities import parser
-from analysis.packet.exceptions import PacketException
-from analysis.packet.nal import NAL
-from analysis.packet.network_data import NetworkData
-from analysis.packet.packet_time import PacketTime
-from analysis.packet.packet_constants import RTPWrapper, ZoomMediaWrapper
-from analysis.packet.udp_packet import UDPPacket
+from app.utilities import parser
+from app.analysis.packet.exceptions import PacketException
+from app.analysis.packet.nal import NAL
+from app.analysis.packet.network_data import NetworkData
+from app.analysis.packet.packet_time import PacketTime
+from app.analysis.packet.packet_constants import RTPWrapper, ZoomMediaWrapper
+from app.analysis.packet.udp_packet import UDPPacket
 
 if __name__ == "__main__":
-    config_dir = Path(__file__).parent.parent.parent
+    config_dir = Path(__file__).parent
     config_file = config_dir / "config.json"
 
     extension_header_vals = set()

@@ -77,7 +77,7 @@ def create_graphs(args_frames: Dict, graph_dir) -> None:
         ax[row_idx].set_title("Timeline of Frame Score")
         ax[row_idx].set_xlabel("Unix Time")
         ax[row_idx].set_ylabel(f"{metric_type.value} Score")
-
+    
     image_filename = (
         graph_dir + "/" + "frame_timeline.png"
     )

@@ -70,17 +70,17 @@ def create_graphs(args_tcpdump: Dict, graph_dir: str) -> None:
 
     # start plotting
 
-    SMALL_SIZE = 150
-    MEDIUM_SIZE = 200
-    BIGGER_SIZE = 300
+    SMALL_SIZE = 250
+    # MEDIUM_SIZE = 200
+    # BIGGER_SIZE = 300
 
     plt.rc("font", size=SMALL_SIZE)  # controls default text sizes
     plt.rc("axes", titlesize=SMALL_SIZE)  # fontsize of the axes title
-    plt.rc("axes", labelsize=MEDIUM_SIZE)  # fontsize of the x and y labels
+    plt.rc("axes", labelsize=SMALL_SIZE)  # fontsize of the x and y labels
     plt.rc("xtick", labelsize=SMALL_SIZE)  # fontsize of the tick labels
     plt.rc("ytick", labelsize=SMALL_SIZE)  # fontsize of the tick labels
-    plt.rc("legend", fontsize=SMALL_SIZE)  # legend fontsize
-    plt.rc("figure", titlesize=BIGGER_SIZE)  # fontsize of the figure title
+    # plt.rc("legend", fontsize=SMALL_SIZE)  # legend fontsize
+    #plt.rc("figure", titlesize=BIGGER_SIZE)  # fontsize of the figure title
 
     fig_width = 200
     fig, ax = plt.subplots(figsize=(fig_width, 80))
@@ -130,8 +130,8 @@ def create_graphs(args_tcpdump: Dict, graph_dir: str) -> None:
     )
     fig.savefig(image_filename)
 
+    fig, ax = plt.subplots(figsize=(fig_width, 80))
     ax.plot_date(time_packet_end, num_fecs, ms=30)
-    ax.grid(True, color='r')
     ax.set_title("Number of FEC Packets Per Frame")
     ax.set_xlabel("Time of Last Packet Per Frame")
     ax.set_ylabel("Number of FEC Packet")

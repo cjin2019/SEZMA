@@ -17,9 +17,9 @@ class NetworkData:
         self.filename: str = filename
         self.packets: PacketList = rdpcap(filename)
         self.local_ip_addr: str = get_if_addr(conf.iface)
-        self.udp_packets = self.get_packets_from_other_zoom_server()
+        self.udp_packets = self.__get_packets_from_other_zoom_server()
 
-    def get_packets_from_other_zoom_server(self) -> List["UDPPacket"]:
+    def __get_packets_from_other_zoom_server(self) -> List["UDPPacket"]:
         """
         Gets the video UDP packets from other server. This can either be zoom server
         or direct communication with P2P
@@ -36,7 +36,6 @@ class NetworkData:
                 if (
                     udp_packet.get_media_type() != ZoomMediaWrapper.INVALID
                 ):  # helps determine if the packet is at least a zoom packet
-                    # if udp_packet.packet_src == "10.29.45.121":
                     udp_packets.append(udp_packet)
         
         return udp_packets
