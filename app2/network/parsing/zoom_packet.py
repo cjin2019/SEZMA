@@ -129,8 +129,9 @@ class ZoomPacket:
     @property
     def video_packet_type(self) -> "RTPWrapper":
         return self.__rtp_layer.payload_type
-
-    def get_packet_size(self) -> int:
+    
+    @property
+    def size(self) -> int:
         """
         Returns the size of the UDP packet
         """
