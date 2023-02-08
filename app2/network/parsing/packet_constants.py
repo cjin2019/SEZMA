@@ -19,6 +19,7 @@ class RTPWrapper(IntEnum):
 
 
 class ExceptionCodes(Enum):
+    INVALID_ZOOM_MEDIA_TYPE = "Invalid Zoom Media Type"
     INVALID_RTP_VERSION = "Invalid RTP Version"
     FU_A_NOT_RESERVED = "FU-A Not Reserved"
     UNSUPPORTED_RTP_TYPE = "Unsupported RTP Type"

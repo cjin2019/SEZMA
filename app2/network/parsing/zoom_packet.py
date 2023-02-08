@@ -1,82 +1,140 @@
+from dataclasses import dataclass
 from scapy.all import Packet
 from scapy.layers.inet import IP, UDP
 
+from app2.network.parsing.exceptions import PacketException
 from app2.network.parsing.packet_time import PacketTime
-from app2.network.parsing.packet_constants import contains_value, ZoomMediaWrapper
+from app2.network.parsing.packet_constants import contains_value, ExceptionCodes, RTPWrapper, ZoomMediaWrapper
+
+
+@dataclass
+class UDPPacketHeader:
+    time: "PacketTime"
+    src_ip_address: str
+    dst_ip_address: str
+    src_port: int
+
+@dataclass
+class ZoomMediaHeader:
+    frame_sequence: bytes
+    number_of_packets_per_frame: int
+    media_type: "ZoomMediaWrapper"
+
+@dataclass
+class RTPHeader:
+    payload_type: "RTPWrapper"
+
 class ZoomPacket:
-    def __init__(self, packet: Packet):
+    @classmethod
+    def parse(cls, packet: Packet) -> "ZoomPacket":
         """
-        packet: a UDP packet
+        packet: a UDP Zoom packet
+
+        May throw PacketException if fails to parse
         """
-        self.__time: float = float(packet.time)
-        self.__packet_src: str = packet[IP].src
-        self.__packet_dst: str = packet[IP].dst
-        self.__packet_sport: int = packet[UDP].sport
-        self.__load: bytes = packet[UDP].load
 
-        self.__zoom_packet_offset = 0
-        if self.__packet_sport == 8801:
-            self.__zoom_packet_offset = 8
+        # UDP Layer
+        udp_layer: "UDPPacketHeader" = UDPPacketHeader(
+            time=PacketTime(float(packet.time)),
+            src_ip_address=packet[IP].src,
+            dst_ip_address=packet[IP].dst,
+            src_port=packet[UDP].sport,
+        )
 
-    @property
-    def time(self) -> "PacketTime":
-        return PacketTime(self.__time)
+        # Zoom Media Layer
+        load: bytes = packet[UDP].load
+        zoom_packet_offset = 0
+        if udp_layer.src_port == 8801:
+            zoom_packet_offset = 8
 
-    @property
-    def packet_src(self) -> str:
-        return self.__packet_src
+        frame_seq: bytes = load[21 + zoom_packet_offset: 23 + zoom_packet_offset]
+        number_packets_per_frame: int = load[23 + zoom_packet_offset]
+        if not contains_value(ZoomMediaWrapper, load[zoom_packet_offset]):
+            raise PacketException(ExceptionCodes.INVALID_ZOOM_MEDIA_TYPE)
+        media_type: "ZoomMediaWrapper" = ZoomMediaWrapper(load[zoom_packet_offset])
 
-    @property
-    def packet_dst(self) -> str:
-        return self.__packet_dst
+        zoom_media_layer: "ZoomMediaHeader" = ZoomMediaHeader(
+            frame_sequence=frame_seq,
+            number_of_packets_per_frame=number_packets_per_frame,
+            media_type=media_type
+        )
 
-    @property
-    def packet_sport(self) -> int:
-        return self.__packet_sport
-    
-    @property
-    def rtp_load(self) -> bytes:
-        rtp_idx: int = 24 + self.__zoom_packet_offset
-
-        if self.__load[rtp_idx] != 144:
-            # try 26 or 28 byte offset
-            # print("changed offset")
-            if self.__load[28 + self.__zoom_packet_offset] == 144:
+        # RTP Layer
+        rtp_idx: int = 24 + zoom_packet_offset
+        if load[rtp_idx] != 144:
+            if load[28 + zoom_packet_offset] == 144:
                 rtp_idx += 4
             else:
                 rtp_idx += 2 
+        rtp_raw_bytes = load[rtp_idx:]
 
-        return self.__load[rtp_idx:]
+        if len(rtp_raw_bytes) == 0:
+            raise PacketException(ExceptionCodes.NOT_ENOUGH_RTP_DATA)
+        oct1: int = rtp_raw_bytes[0]
+        version: int = oct1 >> 6
+        if version != 2:
+            raise PacketException(ExceptionCodes.INVALID_RTP_VERSION)
 
-    def get_frame(self) -> bytes:
-        """
-        Returns the frame sequence number in bytes
-        """
-        start, end = 21 + self.__zoom_packet_offset, 23 + self.__zoom_packet_offset
-        return self.__load[start:end]
+        oct2: int = rtp_raw_bytes[1]
+        payload_type_val: int = oct2 & 127
+        if not contains_value(RTPWrapper, payload_type_val):
+            raise PacketException(ExceptionCodes.UNSUPPORTED_RTP_TYPE)
+        payload_type: "RTPWrapper" = RTPWrapper(payload_type_val)
 
-    def get_number_packets_per_frame(self) -> int:
-        """
-        Returns the number of packets per frame
-        """
-        idx = 23 + self.__zoom_packet_offset
-        return self.__load[idx]
+        rtp_layer: "RTPHeader" = RTPHeader(
+            payload_type=payload_type
+        )
 
-    def get_media_type(self) -> "ZoomMediaWrapper":
-        """
-        Returns the media type
-        """
-        idx = 0 + self.__zoom_packet_offset
-        if not contains_value(ZoomMediaWrapper, self.__load[idx]):
-            return ZoomMediaWrapper.INVALID
+        return ZoomPacket(
+            udp_layer=udp_layer,
+            zoom_media_layer=zoom_media_layer,
+            rtp_layer=rtp_layer,
+            udp_load=load,
+        )
+    
+    def __init__(self, udp_layer: "UDPPacketHeader", zoom_media_layer: "ZoomMediaHeader", rtp_layer: "RTPHeader", udp_load: bytes) -> None:
+        self.__udp_layer: "UDPPacketHeader" = udp_layer
+        self.__zoom_media_layer: "ZoomMediaHeader" = zoom_media_layer
+        self.__rtp_layer: "RTPHeader" = rtp_layer
+        self.__udp_load: bytes = udp_load
+        
+    @property
+    def time(self) -> "PacketTime":
+        return self.__udp_layer.time
 
-        return ZoomMediaWrapper(self.__load[idx])
+    @property
+    def src_ip_address(self) -> str:
+        return self.__udp_layer.src_ip_address
+
+    @property
+    def dst_ip_address(self) -> str:
+        return self.__udp_layer.dst_ip_address
+
+    @property
+    def src_port(self) -> int:
+        return self.__udp_layer.src_port
+    
+    @property
+    def frame_sequence(self) -> bytes:
+        return self.__zoom_media_layer.frame_sequence
+    
+    @property
+    def number_of_packets_per_frame(self) -> int:
+        return self.__zoom_media_layer.number_of_packets_per_frame
+    
+    @property
+    def media_type(self) -> "ZoomMediaWrapper":
+        return self.__zoom_media_layer.media_type
+    
+    @property
+    def video_packet_type(self) -> "RTPWrapper":
+        return self.__rtp_layer.payload_type
 
     def get_packet_size(self) -> int:
         """
         Returns the size of the UDP packet
         """
-        return len(self.__load)
+        return len(self.__udp_load)
     
     # def get_next_layer(self) -> "RTP":
     #     return RTP(self.rtp_load)
