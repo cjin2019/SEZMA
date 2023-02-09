@@ -167,7 +167,7 @@ class Network:
         )
         fig.savefig(image_filename)
 
-    def run_network_processes(self) -> None:
+    def run_network_processes(self, graph_dir: str) -> None:
         queue = mp.Queue()
         capture_start_time = datetime.now()
         t = self.capture_packets(queue)
@@ -177,7 +177,6 @@ class Network:
         t.stop()
         queue.close()
 
-        graph_dir = "/sample_dir"
         if not os.path.exists(graph_dir):
             os.makedirs(graph_dir)
         self.graph_metrics(graph_dir)

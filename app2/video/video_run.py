@@ -1,18 +1,22 @@
 # screen capture -> compute metrics -> save 
 import csv
-import datetime
 import multiprocessing
 import numpy as np
 import Quartz
 import Quartz.CoreGraphics as cg
 import time
 
-from PIL import Image
+from collections import defaultdict
+from datetime import datetime
+from matplotlib import pyplot as plt
+from typing import Dict, List
 
 from app2.video.metrics.image_score import MetricType, get_no_ref_score
+from app2.video.video_metrics import VideoMetrics
 
 # close until no more to capture
 FINISH = 1
+
 
 def get_zoom_window_id() -> int:
     """
@@ -50,15 +54,16 @@ def capture_images(frame_rate: float, data_queue: multiprocessing.Queue):
 
     Assume that the video call has already started
     """
+    print("started capture")
     window_num: int = get_zoom_window_id()
     time_between_frame: float = 1/frame_rate
     
-    capture_start_time = datetime.datetime.now()
-    while (datetime.datetime.now() - capture_start_time).total_seconds() <= 5: # for now run for only five seconds
-        image_start_time = datetime.datetime.now()
+    capture_start_time = datetime.now()
+    while (datetime.now() - capture_start_time).total_seconds() <= 5: # for now run for only five seconds
+        image_start_time = datetime.now()
         raw_data: np.ndarray = capture_image(window_num)
         data_queue.put((image_start_time, raw_data), block=True)
-        image_finish_time = datetime.datetime.now()
+        image_finish_time = datetime.now()
 
         diff = (image_finish_time - image_start_time).total_seconds()
         if(diff < time_between_frame):
@@ -67,36 +72,80 @@ def capture_images(frame_rate: float, data_queue: multiprocessing.Queue):
     data_queue.close()
     print("finished capture")
 
-def compute_metrics(data_queue: multiprocessing.Queue):
-    with open('test.csv', 'w', newline='') as csvfile:
-        writer = csv.writer(csvfile)
-        writer.writerow(['Time'] + [metric.value for metric in MetricType])
-
-        while True:
-            try:
-                res = data_queue.get(block=True)
-                if type(res) == int and res == FINISH:
-                    break
-                image_capture_time, image_data = res
-                writer.writerow([image_capture_time] + [get_no_ref_score(image_data, metric) for metric in MetricType])
-            except ValueError:
-                print("error occurred")
+def compute_metrics(data_queue: multiprocessing.Queue, result_queue: multiprocessing.Queue):
+    print("started computing metrics")
+    while True:
+        try:
+            res = data_queue.get(block=True)
+            if type(res) == int and res == FINISH:
                 break
-    print("finished analysis")
+            image_capture_time, image_data = res
+            metric_record: "VideoMetrics" = VideoMetrics(
+                time=image_capture_time,
+                metrics= {metric_type: get_no_ref_score(image_data, metric_type) for metric_type in MetricType}
+            )
+            result_queue.put(metric_record)
+        except ValueError:
+            print("error occurred in compute_metrics")
+            break
+    result_queue.put(FINISH)
+    print("finished computing metrics")
 
-def run_processes():
-    data_queue = multiprocessing.Queue()
+def graph_metrics(graph_dir: str, result_queue: multiprocessing.Queue) -> None:
+    # get the time and size
+    times: List[datetime] = []
+    image_scores: Dict[MetricType, List[float]] = defaultdict(list)
+    
+    print("started graph metrics")
+    while True:
+        try:
+            metric_record = result_queue.get()
+            if type(metric_record) == int and metric_record == FINISH:
+                break
+            times.append(metric_record.time)
+            for metric_type in MetricType:
+                image_scores[metric_type].append(metric_record.metrics[metric_type])
+        except ValueError:
+            print("error in graph_metrics")
+            break
 
-    process_capture = multiprocessing.Process(target=capture_images, args=(30, data_queue,))
+    # start plotting
+    SMALL_SIZE = 250
+
+    plt.rc("font", size=SMALL_SIZE)  # controls default text sizes
+    plt.rc("axes", titlesize=SMALL_SIZE)  # fontsize of the axes title
+    plt.rc("axes", labelsize=SMALL_SIZE)  # fontsize of the x and y labels
+    plt.rc("xtick", labelsize=SMALL_SIZE)  # fontsize of the tick labels
+    plt.rc("ytick", labelsize=SMALL_SIZE)  # fontsize of the tick labels
+
+    fig, ax = plt.subplots(len(MetricType), 1, figsize=(200, 100))
+    fig.tight_layout(pad=5.0)
+
+    for row_idx, metric_type in enumerate(MetricType):
+        ax[row_idx].grid(True, color='r')
+        ax[row_idx].plot_date(times, image_scores[metric_type], ms=30)
+        ax[row_idx].set_title("Timeline of Frame Score")
+        ax[row_idx].set_xlabel("Unix Time")
+        ax[row_idx].set_ylabel(f"{metric_type.value} Score")
+
+    image_filename = (
+        graph_dir + "/" + "frame_timeline.png"
+    )
+    fig.savefig(image_filename)
+    print("finished graph metrics")
+
+def run_video_processes(graph_dir: str):
+    packet_queue = multiprocessing.Queue()
+    metrics_queue = multiprocessing.Queue()
+
+    process_capture = multiprocessing.Process(target=capture_images, args=(30, packet_queue,))
+    process_analysis = multiprocessing.Process(target=compute_metrics, args=(packet_queue, metrics_queue,))
+    process_graph = multiprocessing.Process(target=graph_metrics, args=(graph_dir, metrics_queue,))
+
     process_capture.start()
-
-    process_analysis = multiprocessing.Process(target=compute_metrics, args=(data_queue,))
     process_analysis.start()
+    process_graph.start()
 
     process_capture.join()
     process_analysis.join()
-
-
-
-if __name__ == "__main__":
-    run_processes()
+    process_graph.join()
