@@ -15,7 +15,6 @@ class ZoomMediaWrapper(IntEnum):
 class RTPWrapper(IntEnum):
     VIDEO = 98
     FEC = 110
-    INVALID = -1
 
 
 class ExceptionCodes(Enum):

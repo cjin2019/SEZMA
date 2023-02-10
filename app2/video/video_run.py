@@ -47,10 +47,10 @@ def capture_image(window_num: int) -> np.ndarray:
     return np_data
     
 
-def capture_images(frame_rate: float, data_queue: multiprocessing.Queue):
+def capture_images(frame_rate: float, duration_seconds: float, data_queue):
     """
-    Params:
-    frame_rate: frames per second
+    Params: frame_rate: frames per second
+    Param: data_queue is mp.Manager.Queue containing np.arrays of images
 
     Assume that the video call has already started
     """
@@ -59,7 +59,7 @@ def capture_images(frame_rate: float, data_queue: multiprocessing.Queue):
     time_between_frame: float = 1/frame_rate
     
     capture_start_time = datetime.now()
-    while (datetime.now() - capture_start_time).total_seconds() <= 5: # for now run for only five seconds
+    while (datetime.now() - capture_start_time).total_seconds() <= duration_seconds: # for now run for only five seconds
         image_start_time = datetime.now()
         raw_data: np.ndarray = capture_image(window_num)
         data_queue.put((image_start_time, raw_data), block=True)
@@ -69,10 +69,14 @@ def capture_images(frame_rate: float, data_queue: multiprocessing.Queue):
         if(diff < time_between_frame):
             time.sleep(time_between_frame - diff)
     data_queue.put(FINISH, block=True)
-    data_queue.close()
+    # data_queue.close()
     print("finished capture")
 
-def compute_metrics(data_queue: multiprocessing.Queue, result_queue: multiprocessing.Queue):
+def compute_metrics(data_queue, result_queue):
+    """
+    Param: data_queue is mp.Manager.Queue containing the raw numpy array of video frames
+    Param: result_queue is mp.Manager.Queue containing the VideoMetrics record
+    """
     print("started computing metrics")
     while True:
         try:

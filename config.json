@@ -1,10 +1,11 @@
 {
     "network_capture_config": {
-        "duration_seconds": 5,
-        "output_file": "/Users/carolinejin/Documents/meng_project/data/test.pcap"
+        "duration_seconds": 10,
+        "output_file": "/Users/carolinejin/Documents/meng_project/data/test_02_10_2023.pcap"
     },
     "frame_capture_config": {
-        "duration_seconds": 5,
-        "output_frame_dir": "/Users/carolinejin/Documents/meng_project/data/test"
+        "duration_seconds": 10,
+        "frame_rate": 30,
+        "output_frame_dir": "/Users/carolinejin/Documents/meng_project/data/test_02_10_2023"
     }
 }
