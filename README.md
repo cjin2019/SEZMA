@@ -90,7 +90,7 @@ listening on eth0, link-type EN10MB (Ethernet), capture size 65535 bytes
 
 #### Run app end-to-end
 1. Start Zoom with one other person. 
-2. Once, you start up your Zoom call is ready, run `python3 [/PATH/TO/]videonetworkapp/main2.py` to capture data and produce graphs of the data
+2. Once, you start up your Zoom call is ready, run `sudo python3 [/PATH/TO/]videonetworkapp/main2.py` to capture data and produce graphs of the data
 <!-- 2. Once, you start up your Zoom call is ready, run `python3 [/PATH/TO/]videonetworkapp/main.py` to capture data and produce graphs of the data  -->
 <!-- #### Capture Zoom Screen
 1. Activate virtual environment with `source /path/to/env/bin/activate`
