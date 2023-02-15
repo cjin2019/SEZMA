@@ -1,5 +1,5 @@
 # screen capture -> compute metrics -> save 
-import csv
+import logging
 import multiprocessing
 import numpy as np
 import Quartz
@@ -16,7 +16,7 @@ from app2.video.video_metrics import VideoMetrics
 
 # close until no more to capture
 FINISH = 1
-
+log = logging.getLogger(__name__)
 
 def get_zoom_window_id() -> int:
     """
@@ -29,7 +29,10 @@ def get_zoom_window_id() -> int:
     return -1
         
 def capture_image(window_num: int) -> np.ndarray:
-    
+    """
+    Param: window_num > 0
+    Gets the raw image data of the window given window_num
+    """
     cg_image = Quartz.CGWindowListCreateImage(Quartz.CGRectNull, Quartz.kCGWindowListOptionIncludingWindow, window_num, Quartz.kCGWindowImageBoundsIgnoreFraming)
 
     bpr = cg.CGImageGetBytesPerRow(cg_image)
@@ -54,7 +57,7 @@ def capture_images(frame_rate: float, duration_seconds: float, data_queue):
 
     Assume that the video call has already started
     """
-    print("started capture")
+    print(f"started {__name__}.{capture_image.__name__}")
     window_num: int = get_zoom_window_id()
     time_between_frame: float = 1/frame_rate
     
@@ -62,25 +65,28 @@ def capture_images(frame_rate: float, duration_seconds: float, data_queue):
     while (datetime.now() - capture_start_time).total_seconds() <= duration_seconds: # for now run for only five seconds
         image_start_time = datetime.now()
         raw_data: np.ndarray = capture_image(window_num)
-        data_queue.put((image_start_time, raw_data), block=True)
+        data_queue.put((image_start_time, raw_data))
         image_finish_time = datetime.now()
 
         diff = (image_finish_time - image_start_time).total_seconds()
         if(diff < time_between_frame):
             time.sleep(time_between_frame - diff)
-    data_queue.put(FINISH, block=True)
+    data_queue.put(FINISH)
     # data_queue.close()
-    print("finished capture")
+    print(f"finished {__name__}.{capture_image.__name__}")
 
 def compute_metrics(data_queue, result_queue):
     """
     Param: data_queue is mp.Manager.Queue containing the raw numpy array of video frames
     Param: result_queue is mp.Manager.Queue containing the VideoMetrics record
     """
-    print("started computing metrics")
+    print(f"started {__name__}.{compute_metrics.__name__}")
+    count_images: int = 0
+    num_image_process_print: int = 100
+
     while True:
         try:
-            res = data_queue.get(block=True)
+            res = data_queue.get()
             if type(res) == int and res == FINISH:
                 break
             image_capture_time, image_data = res
@@ -89,18 +95,21 @@ def compute_metrics(data_queue, result_queue):
                 metrics= {metric_type: get_no_ref_score(image_data, metric_type) for metric_type in MetricType}
             )
             result_queue.put(metric_record)
-        except ValueError:
-            print("error occurred in compute_metrics")
+            count_images += 1
+            if count_images % num_image_process_print == 0:
+                print(f"processed {count_images} images")
+        except ValueError as e:
+            print(f"error in {__name__}.{compute_metrics.__name__}: {e}")
             break
     result_queue.put(FINISH)
-    print("finished computing metrics")
+    print(f"finished {__name__}.{compute_metrics.__name__}")
 
 def graph_metrics(graph_dir: str, result_queue: multiprocessing.Queue) -> None:
     # get the time and size
     times: List[datetime] = []
     image_scores: Dict[MetricType, List[float]] = defaultdict(list)
     
-    print("started graph metrics")
+    print(f"started {__name__}.{graph_metrics.__name__}")
     while True:
         try:
             metric_record = result_queue.get()
@@ -109,8 +118,8 @@ def graph_metrics(graph_dir: str, result_queue: multiprocessing.Queue) -> None:
             times.append(metric_record.time)
             for metric_type in MetricType:
                 image_scores[metric_type].append(metric_record.metrics[metric_type])
-        except ValueError:
-            print("error in graph_metrics")
+        except ValueError as e:
+            print(f"error in {__name__}.{graph_metrics.__name__}: {e}")
             break
 
     # start plotting
@@ -136,20 +145,20 @@ def graph_metrics(graph_dir: str, result_queue: multiprocessing.Queue) -> None:
         graph_dir + "/" + "frame_timeline.png"
     )
     fig.savefig(image_filename)
-    print("finished graph metrics")
+    print("finished " + graph_metrics.__name__)
 
-def run_video_processes(graph_dir: str):
-    packet_queue = multiprocessing.Queue()
-    metrics_queue = multiprocessing.Queue()
+# def run_video_processes(graph_dir: str):
+#     packet_queue = multiprocessing.Queue()
+#     metrics_queue = multiprocessing.Queue()
 
-    process_capture = multiprocessing.Process(target=capture_images, args=(30, packet_queue,))
-    process_analysis = multiprocessing.Process(target=compute_metrics, args=(packet_queue, metrics_queue,))
-    process_graph = multiprocessing.Process(target=graph_metrics, args=(graph_dir, metrics_queue,))
+#     process_capture = multiprocessing.Process(target=capture_images, args=(30, packet_queue,))
+#     process_analysis = multiprocessing.Process(target=compute_metrics, args=(packet_queue, metrics_queue,))
+#     process_graph = multiprocessing.Process(target=graph_metrics, args=(graph_dir, metrics_queue,))
 
-    process_capture.start()
-    process_analysis.start()
-    process_graph.start()
+#     process_capture.start()
+#     process_analysis.start()
+#     process_graph.start()
 
-    process_capture.join()
-    process_analysis.join()
-    process_graph.join()
+#     process_capture.join()
+#     process_analysis.join()
+#     process_graph.join()

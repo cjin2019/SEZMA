@@ -1,4 +1,4 @@
-# run tcpdump -> relevant packet info -> save to file
+import logging
 import multiprocessing as mp
 import os
 from datetime import datetime
@@ -13,6 +13,7 @@ from app2.network.parsing.packet_constants import RTPWrapper
 from app2.network.parsing.zoom_packet import ZoomPacket
 
 FINISH = 1
+log = logging.getLogger(__name__)
 
 def filter_packet_function(packet: Packet) -> bool:
     local_machine_ip_addr = get_if_addr(conf.iface)
@@ -32,12 +33,14 @@ def capture_packets(queue, duration_seconds: float) -> None:
     """
     Param: queue = mp.Manager.Queue
     """
+    print(f"started {__name__}.{capture_packets.__name__}")
     sniff(lfilter=filter_packet_function, 
             prn=lambda pkt: queue.put(pkt),
             opened_socket=L2ListenTcpdump(),
             timeout=duration_seconds,
         )
     queue.put(FINISH)
+    print(f"finished {__name__}.{capture_packets.__name__}")
 
 def compute_metrics(packet_queue, metric_output: List["NetworkMetrics"]):
     """
@@ -45,7 +48,7 @@ def compute_metrics(packet_queue, metric_output: List["NetworkMetrics"]):
     Param: metric_output = mp.Manager.list where it is a list of NetworkMetric
     Adds NetworkMetrics to metric_output 
     """
-
+    print(f"started {__name__}.{compute_metrics.__name__}")
     while True:
         packet = packet_queue.get()
         if type(packet) == int and packet == FINISH:
@@ -63,6 +66,7 @@ def compute_metrics(packet_queue, metric_output: List["NetworkMetrics"]):
                 is_fec = packet.video_packet_type == RTPWrapper.FEC
             )
         )
+    print(f"finished {__name__}.{compute_metrics.__name__}")
 
 def group_by_frame(metric_output) -> Dict[bytes, List["NetworkMetrics"]]:
     """
@@ -80,6 +84,7 @@ def graph_metrics(graph_dir: str, metric_output) -> None:
     Param: metric_output = mp.Manager.list where it is a list of NetworkMetric
     """
 
+    print(f"started  {__name__}.{graph_metrics.__name__}")
     metric_output_by_frame = group_by_frame(metric_output)
 
     # get the time and size
@@ -197,6 +202,7 @@ def graph_metrics(graph_dir: str, metric_output) -> None:
         graph_dir + "/num_packet_difference.png"
     )
     fig.savefig(image_filename)
+    print(f"finished {__name__}.{graph_metrics.__name__}")
 
 # def run_network_processes(self, graph_dir: str) -> None:
 #     packet_queue = mp.Queue()
