@@ -4,6 +4,7 @@ import multiprocessing
 import numpy as np
 import Quartz
 import Quartz.CoreGraphics as cg
+import queue
 import time
 
 from collections import defaultdict
@@ -71,7 +72,7 @@ def capture_images(frame_rate: float, duration_seconds: float, data_queue):
         diff = (image_finish_time - image_start_time).total_seconds()
         if(diff < time_between_frame):
             time.sleep(time_between_frame - diff)
-    data_queue.put(FINISH)
+    # data_queue.put(FINISH)
     # data_queue.close()
     print(f"finished {__name__}.{capture_image.__name__}")
 
@@ -86,9 +87,9 @@ def compute_metrics(data_queue, result_queue):
 
     while True:
         try:
-            res = data_queue.get()
-            if type(res) == int and res == FINISH:
-                break
+            res = data_queue.get(timeout=2) # assume video frames are captured faster than 1 fps
+            # if type(res) == int and res == FINISH:
+            #     break
             image_capture_time, image_data = res
             metric_record: "VideoMetrics" = VideoMetrics(
                 time=image_capture_time,
@@ -98,6 +99,9 @@ def compute_metrics(data_queue, result_queue):
             count_images += 1
             if count_images % num_image_process_print == 0:
                 print(f"processed {count_images} images")
+        except queue.Empty as e:
+            print(f"finished computing metrics for a process {__name__}.{compute_metrics.__name__}: {e}")
+            break
         except ValueError as e:
             print(f"error in {__name__}.{compute_metrics.__name__}: {e}")
             break

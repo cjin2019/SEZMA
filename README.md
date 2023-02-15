@@ -5,6 +5,9 @@
 ### OS
 Only compatible for macOS 10.12+.
 
+### Permisions
+
+In order to run this command line, you must run in `sudo`.
 ### Packages
 
 <!-- #### FFmpeg (Might not need it if doing screencapture command instead)
@@ -18,6 +21,17 @@ Only compatible for macOS 10.12+.
 **NOTE: in [] should be changed to your config**
 
 #### tcpdump
+1. Test command: `sudo tcpdump`. It should output the current network stats, like below
+```
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on eth0, link-type EN10MB (Ethernet), capture size 65535 bytes
+21:02:19.112502 IP test33.ntp > 199.30.140.74.ntp: NTPv4, Client, length 48
+21:02:19.113888 IP 216.239.35.0.ntp > test33.ntp: NTPv4, Server, length 48
+21:02:20.150347 IP test33.ntp > 216.239.35.0.ntp: NTPv4, Client, length 48
+21:02:20.150991 IP 216.239.35.0.ntp > test33.ntp: NTPv4, Server, length 48
+``` 
+
+<!-- #### tcpdump
 1. Enable `sudo` cmd without having to input password. Following steps are from this [blog](http://www.linuxtechnotes.com/2015/10/how-to-give-sudo-access-to-user-run.html) 
     1. Make a backup of `/etc/sudoers` file. (`cp /etc/sudoers /tmp/sudoers_[MM_DD_YYYY]`, replacing with the current date)
     2. Edit the `/etc/sudoers` file. (`sudo visudo`)
@@ -32,14 +46,14 @@ listening on eth0, link-type EN10MB (Ethernet), capture size 65535 bytes
 21:02:20.150347 IP test33.ntp > 216.239.35.0.ntp: NTPv4, Client, length 48
 21:02:20.150991 IP 216.239.35.0.ntp > test33.ntp: NTPv4, Server, length 48
 ``` 
-3. **NOTE: This may have some security issues. You may want to comment Step 1.3 out when not using the app**
+3. **NOTE: This may have some security issues. You may want to comment Step 1.3 out when not using the app** -->
 
-#### Xcode Command Line Tools
+<!-- #### Xcode Command Line Tools
 1. You must have an AppleID to install tool
 2. Enable to run `swift` on terminal. Following steps are from [here](https://apple.stackexchange.com/a/254381)
     1. Run `xcode-select --install` to install Xcode command line tools. You do not need Xcode; you can install only the command line.
     2. If you are running into issues, run `sudo xcode-select --reset` then step 1.1.
-2. Test command: `swift`. It should output a Welcome message. 
+2. Test command: `swift`. It should output a Welcome message.  -->
 
 #### Screen Capture 
 1. You will need permissions to screen capture from Terminal. 
@@ -70,12 +84,14 @@ listening on eth0, link-type EN10MB (Ethernet), capture size 65535 bytes
 ### Commands to Run
 
 #### Set up configuration
-1. Edit `config.json` file to save to the data to appropriate location and run the screen capture for however long you like
+. Edit `config.ini` file to save to the data to appropriate location and run the screen capture for however long you like
+<!-- 1. Edit `config.json` file to save to the data to appropriate location and run the screen capture for however long you like -->
 <!-- 2. To get the appropriate device index, run `ffmpeg -f avfoundation -list_devices true -i ""`. Choose the number in `[]` that correspond to screen capture for video -->
 
 #### Run app end-to-end
 1. Start Zoom with one other person. 
-2. Once, you start up your Zoom call is ready, run `python3 [/PATH/TO/]videonetworkapp/main.py` to capture data and produce graphs of the data 
+2. Once, you start up your Zoom call is ready, run `python3 [/PATH/TO/]videonetworkapp/main2.py` to capture data and produce graphs of the data
+<!-- 2. Once, you start up your Zoom call is ready, run `python3 [/PATH/TO/]videonetworkapp/main.py` to capture data and produce graphs of the data  -->
 <!-- #### Capture Zoom Screen
 1. Activate virtual environment with `source /path/to/env/bin/activate`
 2. `cd videonetworkapp` 

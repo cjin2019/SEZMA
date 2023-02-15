@@ -43,16 +43,20 @@ def run_app():
     frame_queue = manager.Queue()
     video_metrics = manager.Queue()
 
+    num_compute_video_processes = 3
+
     capture_network_process = mp.Process(target=network.capture_packets, args=(packet_queue, duration_seconds))
     capture_video_process = mp.Process(target=video.capture_images, args=(frame_rate, duration_seconds, frame_queue,))
     compute_network_metrics_process = mp.Process(target=network.compute_metrics, args=(packet_queue, network_metrics,))
-    compute_video_metrics_process = mp.Process(target=video.compute_metrics, args=(frame_queue, video_metrics,))
+    compute_video_metrics_processes = [mp.Process(target=video.compute_metrics, args=(frame_queue, video_metrics,)) for i in range(num_compute_video_processes)]
     graph_video_metrics_process = mp.Process(target=video.graph_metrics, args=(output_directory, video_metrics,))
 
+    # start compute first since it takes the longest
+    for process in compute_video_metrics_processes:
+        process.start()
     capture_network_process.start()
     capture_video_process.start()
     compute_network_metrics_process.start()
-    compute_video_metrics_process.start()
     graph_video_metrics_process.start()
 
     capture_network_process.join()
@@ -60,7 +64,8 @@ def run_app():
     network.graph_metrics(graph_dir=output_directory, metric_output=network_metrics)
 
     capture_video_process.join()
-    compute_video_metrics_process.join()
+    for process in compute_video_metrics_processes:
+        process.join()
     graph_video_metrics_process.join()
 
 
