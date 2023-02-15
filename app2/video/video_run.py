@@ -11,6 +11,7 @@ from collections import defaultdict
 from datetime import datetime
 from matplotlib import pyplot as plt
 from typing import Dict, List
+from PIL import Image
 
 from app2.video.metrics.image_score import MetricType, get_no_ref_score
 from app2.video.video_metrics import VideoMetrics
@@ -29,10 +30,12 @@ def get_zoom_window_id() -> int:
             return int(win.get(Quartz.kCGWindowNumber, ''))
     return -1
         
-def capture_image(window_num: int) -> np.ndarray:
+def capture_image(window_num: int):
     """
     Param: window_num > 0
     Gets the raw image data of the window given window_num
+
+    Returns Quartz.CGImage of the Zoom window
     """
     cg_image = Quartz.CGWindowListCreateImage(Quartz.CGRectNull, Quartz.kCGWindowListOptionIncludingWindow, window_num, Quartz.kCGWindowImageBoundsIgnoreFraming)
 
@@ -42,14 +45,35 @@ def capture_image(window_num: int) -> np.ndarray:
 
     cg_dataprovider = cg.CGImageGetDataProvider(cg_image)
     cg_data = cg.CGDataProviderCopyData(cg_dataprovider)
+    # np_raw_data = np.frombuffer(cg_data, dtype=np.uint8)
+
+    # np_data = np.lib.stride_tricks.as_strided(np_raw_data,
+    #                                         shape=(height, width, 3),
+    #                                         strides=(bpr, 4, 1),
+    #                                         writeable=False)
+    pil_image = Image.frombuffer("RGBA", (width, height), cg_data, "raw", "BGRA", bpr, 1)
+    # pil_image.save(f"{window_num}.png")
+    return pil_image
+    
+def prepare_for_metric_computation(cg_image) -> np.ndarray:
+    """
+    Param: cg_image is Quartz.CGImage
+
+    Returns raw image data to process for metric computation
+    """
+    
+    bpr = cg.CGImageGetBytesPerRow(cg_image)
+    width = cg.CGImageGetWidth(cg_image)
+    height = cg.CGImageGetHeight(cg_image)
+
+    cg_dataprovider = cg.CGImageGetDataProvider(cg_image)
+    cg_data = cg.CGDataProviderCopyData(cg_dataprovider)
     np_raw_data = np.frombuffer(cg_data, dtype=np.uint8)
 
-    np_data = np.lib.stride_tricks.as_strided(np_raw_data,
+    return np.lib.stride_tricks.as_strided(np_raw_data,
                                             shape=(height, width, 3),
                                             strides=(bpr, 4, 1),
                                             writeable=False)
-    return np_data
-    
 
 def capture_images(frame_rate: float, duration_seconds: float, data_queue):
     """
@@ -72,6 +96,7 @@ def capture_images(frame_rate: float, duration_seconds: float, data_queue):
         diff = (image_finish_time - image_start_time).total_seconds()
         if(diff < time_between_frame):
             time.sleep(time_between_frame - diff)
+        # print(image_start_time)
     # data_queue.put(FINISH)
     # data_queue.close()
     print(f"finished {__name__}.{capture_image.__name__}")
@@ -91,6 +116,8 @@ def compute_metrics(data_queue, result_queue):
             # if type(res) == int and res == FINISH:
             #     break
             image_capture_time, image_data = res
+            image_data = np.asarray(image_data)
+            # image_data = prepare_for_metric_computation(cg_image)
             metric_record: "VideoMetrics" = VideoMetrics(
                 time=image_capture_time,
                 metrics= {metric_type: get_no_ref_score(image_data, metric_type) for metric_type in MetricType}
