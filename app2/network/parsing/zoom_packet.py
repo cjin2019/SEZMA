@@ -24,7 +24,11 @@ class ZoomMediaHeader:
 class RTPHeader:
     payload_type: "RTPWrapper"
 
+
 class ZoomPacket:
+    """
+    ZoomPacket stores useful field information from the UDP Zoom packets received
+    """
     @classmethod
     def parse(cls, packet: Packet) -> "ZoomPacket":
         """
@@ -141,15 +145,5 @@ class ZoomPacket:
         Returns the size of the UDP packet
         """
         return len(self.__udp_load)
-    
-    # def get_next_layer(self) -> "RTP":
-    #     return RTP(self.rtp_load)
-    
-    # def get_rtp_type(self) -> "RTPWrapper":
-    #     try:
-    #         return self.get_next_layer().header.payload_type
-    #     except PacketException as e:
-    #         print(e)
-    #         return RTPWrapper.INVALID
 
     

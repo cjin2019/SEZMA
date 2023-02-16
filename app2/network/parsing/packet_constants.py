@@ -1,7 +1,6 @@
 from enum import Enum, IntEnum
 from typing import Type
 
-
 class ZoomMediaWrapper(IntEnum):
     RTP_VIDEO = 16
     RTP_AUDIO = 15

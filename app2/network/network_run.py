@@ -55,7 +55,6 @@ def compute_metrics(packet_queue, metric_output: List["NetworkMetrics"]):
             break
 
         packet = ZoomPacket.parse(packet)
-
         frame_squence_num: bytes = packet.frame_sequence
         metric_output.append(
             NetworkMetrics(

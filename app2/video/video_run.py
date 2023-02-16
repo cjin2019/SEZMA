@@ -16,7 +16,7 @@ from PIL import Image
 from app2.video.metrics.image_score import MetricType, get_no_ref_score
 from app2.video.video_metrics import VideoMetrics
 
-# close until no more to capture
+# help notify the queue that no more data is being captured
 FINISH = 1
 log = logging.getLogger(__name__)
 
@@ -30,12 +30,14 @@ def get_zoom_window_id() -> int:
             return int(win.get(Quartz.kCGWindowNumber, ''))
     return -1
         
-def capture_image(window_num: int):
+def capture_image(window_num: int) -> Image.Image:
     """
     Param: window_num > 0
     Gets the raw image data of the window given window_num
 
-    Returns Quartz.CGImage of the Zoom window
+    https://stackoverflow.com/a/53607100
+
+    Returns PIL Image of the Zoom window
     """
     cg_image = Quartz.CGWindowListCreateImage(Quartz.CGRectNull, Quartz.kCGWindowListOptionIncludingWindow, window_num, Quartz.kCGWindowImageBoundsIgnoreFraming)
 
@@ -54,28 +56,8 @@ def capture_image(window_num: int):
     pil_image = Image.frombuffer("RGBA", (width, height), cg_data, "raw", "BGRA", bpr, 1)
     # pil_image.save(f"{window_num}.png")
     return pil_image
-    
-def prepare_for_metric_computation(cg_image) -> np.ndarray:
-    """
-    Param: cg_image is Quartz.CGImage
 
-    Returns raw image data to process for metric computation
-    """
-    
-    bpr = cg.CGImageGetBytesPerRow(cg_image)
-    width = cg.CGImageGetWidth(cg_image)
-    height = cg.CGImageGetHeight(cg_image)
-
-    cg_dataprovider = cg.CGImageGetDataProvider(cg_image)
-    cg_data = cg.CGDataProviderCopyData(cg_dataprovider)
-    np_raw_data = np.frombuffer(cg_data, dtype=np.uint8)
-
-    return np.lib.stride_tricks.as_strided(np_raw_data,
-                                            shape=(height, width, 3),
-                                            strides=(bpr, 4, 1),
-                                            writeable=False)
-
-def capture_images(frame_rate: float, duration_seconds: float, data_queue):
+def capture_images(frame_rate: float, duration_seconds: float, data_queue) -> None:
     """
     Params: frame_rate: frames per second
     Param: data_queue is mp.Manager.Queue containing np.arrays of images
@@ -96,9 +78,7 @@ def capture_images(frame_rate: float, duration_seconds: float, data_queue):
         diff = (image_finish_time - image_start_time).total_seconds()
         if(diff < time_between_frame):
             time.sleep(time_between_frame - diff)
-        # print(image_start_time)
-    # data_queue.put(FINISH)
-    # data_queue.close()
+
     print(f"finished {__name__}.{capture_image.__name__}")
 
 def compute_metrics(data_queue, result_queue):
@@ -177,19 +157,3 @@ def graph_metrics(graph_dir: str, result_queue: multiprocessing.Queue) -> None:
     )
     fig.savefig(image_filename)
     print("finished " + graph_metrics.__name__)
-
-# def run_video_processes(graph_dir: str):
-#     packet_queue = multiprocessing.Queue()
-#     metrics_queue = multiprocessing.Queue()
-
-#     process_capture = multiprocessing.Process(target=capture_images, args=(30, packet_queue,))
-#     process_analysis = multiprocessing.Process(target=compute_metrics, args=(packet_queue, metrics_queue,))
-#     process_graph = multiprocessing.Process(target=graph_metrics, args=(graph_dir, metrics_queue,))
-
-#     process_capture.start()
-#     process_analysis.start()
-#     process_graph.start()
-
-#     process_capture.join()
-#     process_analysis.join()
-#     process_graph.join()
