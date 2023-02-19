@@ -1,20 +1,82 @@
+import csv
 import logging
 import multiprocessing as mp
 import os
+import time
 from datetime import datetime
+from enum import Enum
 from matplotlib import pyplot as plt
-from scapy.all import conf, get_if_addr, sniff, L2ListenTcpdump, Packet
+from scapy.all import conf, get_if_addr, sniff, ConsoleSink, QueueSink, Packet, PipeEngine, SniffSource, TransformDrain
 from scapy.layers.inet import UDP, IP
-from typing import Dict, List
+from typing import Dict, List, Tuple, Union
 
 from app2.network.network_metrics import NetworkMetrics
 from app2.network.parsing.exceptions import PacketException
 from app2.network.parsing.packet_constants import RTPWrapper
 from app2.network.parsing.zoom_packet import ZoomPacket
 
-FINISH = 1
 log = logging.getLogger(__name__)
 
+class SpecialQueueValues(Enum):
+    FINISH = 1
+    NON_ZOOM_PACKET = 2
+
+def pipeline_run() -> None:
+    local_machine_ip_addr = get_if_addr(conf.iface)
+    source = SniffSource(iface=conf.iface,
+                         filter=f"udp and dst host {local_machine_ip_addr}")
+    filterTransform = TransformDrain(get_zoom_packet)
+    sink = QueueSink()
+    source > filterTransform > sink
+    p = PipeEngine(source)
+    p.start()
+    write_metrics("test.csv", sink, 5)
+    p.stop()
+    
+def start_pipeline(pipe_engine: PipeEngine, queue_sink: QueueSink) -> None:
+    pipe_engine.start()
+    time.sleep(5)
+    pipe_engine.stop()
+    queue_sink.push(SpecialQueueValues.FINISH)
+
+def write_metrics(filename: str, sink: QueueSink, duration_second: float):
+    start_time = None
+    header = []
+    with open(filename, "w") as csv_file:
+        csv_writer = csv.writer(csv_file)
+        while True:
+            received_object = sink.recv()
+            if type(received_object) == SpecialQueueValues and received_object == SpecialQueueValues.NON_ZOOM_PACKET:
+                continue
+            packet: "ZoomPacket" = received_object
+            metrics = NetworkMetrics(
+                    frame_sequence_number = packet.frame_sequence,
+                    packet_time = packet.time.get_datetime(),
+                    packet_size = packet.size,
+                    expected_number_of_packets= packet.number_of_packets_per_frame,
+                    is_fec = packet.video_packet_type == RTPWrapper.FEC
+            )
+            print(metrics)
+
+            if start_time == None:
+                start_time = packet.time.get_datetime()
+                csv_writer.writerow(metrics.__dict__.keys())
+            csv_writer.writerow(metrics.__dict__.values())
+            if (packet.time.get_datetime() - start_time).total_seconds() > duration_second:
+                break
+        
+    # with open(filename, mode="a") as csv_file:
+    #     csv_writer = csv.writer(csv_file)
+    #     csv_writer.writerow()
+
+
+def get_zoom_packet(packet: Packet) -> Union[ZoomPacket,SpecialQueueValues]:
+    try:
+        return ZoomPacket.parse(packet)
+    except PacketException:
+        return SpecialQueueValues.NON_ZOOM_PACKET
+
+    
 def filter_packet_function(packet: Packet) -> bool:
     local_machine_ip_addr = get_if_addr(conf.iface)
     if (IP in packet
@@ -34,12 +96,24 @@ def capture_packets(queue, duration_seconds: float) -> None:
     Param: queue = mp.Manager.Queue
     """
     print(f"started {__name__}.{capture_packets.__name__}")
-    sniff(lfilter=filter_packet_function, 
+    local_machine_ip_addr = get_if_addr(conf.iface)
+    print(local_machine_ip_addr)
+    output = sniff( 
+            filter=f"udp and dst host {local_machine_ip_addr}",
             prn=lambda pkt: queue.put(pkt),
-            opened_socket=L2ListenTcpdump(),
             timeout=duration_seconds,
         )
-    queue.put(FINISH)
+    # time.sleep(2)
+    queue.put(SpecialQueueValues.FINISH)
+    print("number captured:", len(output))
+
+    zoom_packets = []
+    for packet in output:
+        try:
+            zoom_packets.append(ZoomPacket.parse(packet))
+        except PacketException:
+            continue
+    print("number of zoom packets captured: ", len(zoom_packets))
     print(f"finished {__name__}.{capture_packets.__name__}")
 
 def compute_metrics(packet_queue, metric_output: List["NetworkMetrics"]):
@@ -51,7 +125,7 @@ def compute_metrics(packet_queue, metric_output: List["NetworkMetrics"]):
     print(f"started {__name__}.{compute_metrics.__name__}")
     while True:
         packet = packet_queue.get()
-        if type(packet) == int and packet == FINISH:
+        if type(packet) == SpecialQueueValues and packet == SpecialQueueValues.FINISH:
             break
 
         packet = ZoomPacket.parse(packet)
@@ -203,17 +277,26 @@ def graph_metrics(graph_dir: str, metric_output) -> None:
     fig.savefig(image_filename)
     print(f"finished {__name__}.{graph_metrics.__name__}")
 
-# def run_network_processes(self, graph_dir: str) -> None:
-#     packet_queue = mp.Queue()
-#     metric_records = mp.Manager()
-#     capture_packets_process = mp.Process(target=capture_packets, args=(queue,))
-#     compute_metrics = mp.Process(target=capture_packets, )
+def run_network_processes(duration_seconds: int, graph_dir: str) -> None:
+    manager = mp.Manager()
+    packet_queue = manager.Queue()
+    metric_queue = manager.list()
+    capture_packets_process = mp.Process(target=capture_packets, args=(packet_queue, duration_seconds))
+    compute_metrics_process = mp.Process(target=compute_metrics, args=(packet_queue, metric_queue, ))
 
-#     if not os.path.exists(graph_dir):
-#         os.makedirs(graph_dir)
-#     graph_metrics(graph_dir, me)
+    capture_packets_process.start()
+    compute_metrics_process.start()
+
+    capture_packets_process.join()
+    compute_metrics_process.join()
+
+    if not os.path.exists(graph_dir):
+        os.makedirs(graph_dir)
+    print(len(metric_queue))
+    graph_metrics(graph_dir, metric_queue)
 
 
-
+def run2():
+    pipeline_run()
 # if __name__ == "__main__":
 #     run_processes()

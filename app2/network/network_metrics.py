@@ -15,3 +15,4 @@ class NetworkMetrics:
     expected_number_of_packets: int
     is_fec: bool
 
+

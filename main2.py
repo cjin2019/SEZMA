@@ -70,4 +70,7 @@ def run_app():
 
 
 if __name__ == "__main__":
-    run_app()
+    # run_app()
+    graph_dir = "/Users/carolineljin/Documents/meng_project/data/02_18_2023"
+    duration_seconds = 5
+    network.run2()

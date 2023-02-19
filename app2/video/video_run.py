@@ -71,7 +71,7 @@ def capture_images(frame_rate: float, duration_seconds: float, data_queue) -> No
     capture_start_time = datetime.now()
     while (datetime.now() - capture_start_time).total_seconds() <= duration_seconds: # for now run for only five seconds
         image_start_time = datetime.now()
-        raw_data: np.ndarray = capture_image(window_num)
+        raw_data: Image.Image = capture_image(window_num)
         data_queue.put((image_start_time, raw_data))
         image_finish_time = datetime.now()
 
@@ -115,7 +115,7 @@ def compute_metrics(data_queue, result_queue):
     result_queue.put(FINISH)
     print(f"finished {__name__}.{compute_metrics.__name__}")
 
-def graph_metrics(graph_dir: str, result_queue: multiprocessing.Queue) -> None:
+def graph_metrics(graph_dir: str, result_queue: multiprocessing.Queue, num_compute_processes) -> None:
     # get the time and size
     times: List[datetime] = []
     image_scores: Dict[MetricType, List[float]] = defaultdict(list)

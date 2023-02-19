@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from scapy.all import Packet
+from scapy.all import Packet, conf, get_if_addr
 from scapy.layers.inet import IP, UDP
 
 from app2.network.parsing.exceptions import PacketException
@@ -45,6 +45,9 @@ class ZoomPacket:
                 dst_ip_address=packet[IP].dst,
                 src_port=packet[UDP].sport,
             )
+
+            if packet[IP].dst != get_if_addr(conf.iface):
+                raise PacketException(ExceptionCodes.OTHER, "not the right destination")
 
             # Zoom Media Layer
             load: bytes = packet[UDP].load
