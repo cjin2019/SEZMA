@@ -3,6 +3,7 @@ import logging
 import multiprocessing as mp
 import os
 import time
+from ctypes import c_int
 from typing import Dict, Tuple
 
 import app2.network.network_run as network
@@ -68,9 +69,29 @@ def run_app():
         process.join()
     graph_video_metrics_process.join()
 
+def run_app2():
+    duration_seconds, frame_rate, output_directory = open_config()
+    data_queue = mp.Queue()
+    event_check_zoom_meeting_open = mp.Event()
+
+    video_csv_filename = output_directory + "/video.csv"
+    network_csv_filename = output_directory + "/network.csv"
+
+    zoom_check_process = mp.Process(target=video.check_zoom_window_up, args=(event_check_zoom_meeting_open,))
+    network_process = mp.Process(target=network.pipeline_run, args=(network_csv_filename, event_check_zoom_meeting_open,))
+    capture_process = mp.Process(target=video.capture_images, args=(frame_rate, data_queue,event_check_zoom_meeting_open,))
+    compute_process = mp.Process(target=video.compute_metrics2, args=(data_queue, video_csv_filename,event_check_zoom_meeting_open,))
+
+    zoom_check_process.start()
+    network_process.start()
+    capture_process.start()
+    compute_process.start()
+
+    capture_process.join()
+    compute_process.join()
+    network_process.join()
+    zoom_check_process.join()
 
 if __name__ == "__main__":
     # run_app()
-    graph_dir = "/Users/carolineljin/Documents/meng_project/data/02_18_2023"
-    duration_seconds = 5
-    network.run2()
+    run_app2()

@@ -21,7 +21,7 @@ class SpecialQueueValues(Enum):
     FINISH = 1
     NON_ZOOM_PACKET = 2
 
-def pipeline_run() -> None:
+def pipeline_run(filename: str, zoom_meeting_check: mp.Event) -> None:
     local_machine_ip_addr = get_if_addr(conf.iface)
     source = SniffSource(iface=conf.iface,
                          filter=f"udp and dst host {local_machine_ip_addr}")
@@ -29,9 +29,12 @@ def pipeline_run() -> None:
     sink = QueueSink()
     source > filterTransform > sink
     p = PipeEngine(source)
+    zoom_meeting_check.wait() # wait until it's on
     p.start()
-    write_metrics("test.csv", sink, 5)
-    p.stop()
+    print("just started network pipeline")
+    write_metrics(filename, sink, zoom_meeting_check)
+    p.stop()   
+    print("finished network pipeline")
     
 def start_pipeline(pipe_engine: PipeEngine, queue_sink: QueueSink) -> None:
     pipe_engine.start()
@@ -39,13 +42,15 @@ def start_pipeline(pipe_engine: PipeEngine, queue_sink: QueueSink) -> None:
     pipe_engine.stop()
     queue_sink.push(SpecialQueueValues.FINISH)
 
-def write_metrics(filename: str, sink: QueueSink, duration_second: float):
+def write_metrics(filename: str, sink: QueueSink, zoom_meeting_check):
     start_time = None
-    header = []
+
     with open(filename, "w") as csv_file:
         csv_writer = csv.writer(csv_file)
-        while True:
-            received_object = sink.recv()
+        while zoom_meeting_check.is_set():
+            received_object = sink.recv(timeout=5) # 5 second timeout this means there is only 1 person on call
+            if received_object == None:
+                continue
             if type(received_object) == SpecialQueueValues and received_object == SpecialQueueValues.NON_ZOOM_PACKET:
                 continue
             packet: "ZoomPacket" = received_object
@@ -56,19 +61,13 @@ def write_metrics(filename: str, sink: QueueSink, duration_second: float):
                     expected_number_of_packets= packet.number_of_packets_per_frame,
                     is_fec = packet.video_packet_type == RTPWrapper.FEC
             )
-            print(metrics)
 
             if start_time == None:
                 start_time = packet.time.get_datetime()
                 csv_writer.writerow(metrics.__dict__.keys())
             csv_writer.writerow(metrics.__dict__.values())
-            if (packet.time.get_datetime() - start_time).total_seconds() > duration_second:
-                break
-        
-    # with open(filename, mode="a") as csv_file:
-    #     csv_writer = csv.writer(csv_file)
-    #     csv_writer.writerow()
-
+            # if (packet.time.get_datetime() - start_time).total_seconds() > duration_second:
+            #     break
 
 def get_zoom_packet(packet: Packet) -> Union[ZoomPacket,SpecialQueueValues]:
     try:
