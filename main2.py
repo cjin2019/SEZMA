@@ -71,7 +71,9 @@ def run_app():
 
 def run_app2():
     duration_seconds, frame_rate, output_directory = open_config()
+    num_processes = 3
     data_queue = mp.Queue()
+    video_metrics_queue = mp.Queue()
     event_check_zoom_meeting_open = mp.Event()
 
     video_csv_filename = output_directory + "/video.csv"
@@ -79,18 +81,24 @@ def run_app2():
 
     zoom_check_process = mp.Process(target=video.check_zoom_window_up, args=(event_check_zoom_meeting_open,))
     network_process = mp.Process(target=network.pipeline_run, args=(network_csv_filename, event_check_zoom_meeting_open,))
-    capture_process = mp.Process(target=video.capture_images, args=(frame_rate, data_queue,event_check_zoom_meeting_open,))
-    compute_process = mp.Process(target=video.compute_metrics2, args=(data_queue, video_csv_filename,event_check_zoom_meeting_open,))
+    video_capture_process = mp.Process(target=video.capture_images, args=(frame_rate, data_queue,event_check_zoom_meeting_open,))
+    video_compute_processes = [mp.Process(target=video.compute_metrics3, args=(data_queue, video_metrics_queue, event_check_zoom_meeting_open,)) for i in range(num_processes)]
+    video_log_process = mp.Process(target=video.write_metrics, args=(video_metrics_queue, video_csv_filename, event_check_zoom_meeting_open))
 
     zoom_check_process.start()
     network_process.start()
-    capture_process.start()
-    compute_process.start()
+    video_capture_process.start()
+    for compute_process in video_compute_processes:
+        compute_process.start()
+    video_log_process.start()
 
-    capture_process.join()
+    video_capture_process.join()
     compute_process.join()
     network_process.join()
     zoom_check_process.join()
+    for compute_process in video_compute_processes:
+        compute_process.join()
+    video_log_process.join()
 
 if __name__ == "__main__":
     # run_app()

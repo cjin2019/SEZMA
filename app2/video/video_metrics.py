@@ -8,4 +8,3 @@ from app2.video.metrics.image_score import MetricType
 class VideoMetrics:
     time: datetime
     metrics: Dict[MetricType, float]
-    

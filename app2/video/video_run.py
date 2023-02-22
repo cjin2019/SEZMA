@@ -99,7 +99,7 @@ def capture_images(frame_rate: float, data_queue, zoom_meeting_on_check: mp.Even
             if(diff < time_between_frame):
                 time.sleep(time_between_frame - diff)
         except Exception as e:
-            print(f"exception in capture_images {e}")
+            print(f"exception in capture_images {type(e)}")
         
 
     print(f"finished {__name__}.{capture_image.__name__}")
@@ -110,6 +110,7 @@ def compute_metrics(data_queue, result_queue):
     Param: result_queue is mp.Manager.Queue containing the VideoMetrics record
     """
     print(f"started {__name__}.{compute_metrics.__name__}")
+    start_time = datetime.now()
     count_images: int = 0
     num_image_process_print: int = 100
     row = []
@@ -137,7 +138,8 @@ def compute_metrics(data_queue, result_queue):
             print(f"error in {__name__}.{compute_metrics.__name__}: {e}")
             break
     result_queue.put(FINISH)
-    print(f"finished {__name__}.{compute_metrics.__name__}")
+    end_time = datetime.now()
+    print(f"finished {__name__}.{compute_metrics.__name__} in {end_time - start_time}")
 
 def compute_metrics2(data_queue, filename: str, zoom_meeting_on_check: mp.Event):
     """
@@ -175,6 +177,62 @@ def compute_metrics2(data_queue, filename: str, zoom_meeting_on_check: mp.Event)
                 print(f"error in {__name__}.{compute_metrics.__name__}: {e}")
                 break
         print(f"finished {__name__}.{compute_metrics.__name__}")
+
+def compute_metrics3(data_queue, result_queue, zoom_meeting_on_check: mp.Event):
+    """
+    Param: data_queue is mp.Manager.Queue containing the raw numpy array of video frames
+    Param: result_queue is mp.Manager.Queue containing the VideoMetrics record
+    """
+    zoom_meeting_on_check.wait()
+    print(f"started {__name__}.{compute_metrics.__name__}")
+
+    while True:
+        try:
+            res = data_queue.get(timeout=5) 
+            
+            image_capture_time, image_data = res
+            image_data = np.asarray(image_data)
+
+            # image_data = prepare_for_metric_computation(cg_image)
+            metric_record: "VideoMetrics" = VideoMetrics(
+                time=image_capture_time,
+                metrics= {metric_type: get_no_ref_score(image_data, metric_type) for metric_type in MetricType}
+            )
+            result_queue.put(metric_record)
+        except queue.Empty as e:
+            if not zoom_meeting_on_check.is_set():
+                break
+        except ValueError as e:
+            print(f"error in {__name__}.{compute_metrics.__name__}: {e}")
+            break
+    print(f"finished {__name__}.{compute_metrics.__name__}")
+
+def write_metrics(metric_queue, filename: str, zoom_meeting_on_check: mp.Event):
+
+    zoom_meeting_on_check.wait()
+    started = False
+    count_images: int = 0
+    num_image_process_print: int = 100
+
+    with open(filename, mode="w") as csv_file:
+        csv_writer = csv.writer(csv_file)
+        while True:
+            try:
+                res: "VideoMetrics" = metric_queue.get(timeout=5)
+                if not started:
+                    csv_writer.writerow(["time"] + [metric_type.value for metric_type in MetricType])
+                    started = True
+                csv_writer.writerow([res.time] + [res.metrics[metric_type] for metric_type in MetricType])
+
+                count_images += 1
+                if count_images % num_image_process_print == 0:
+                    print(f"processed {count_images} images")
+            except queue.Empty as e:
+                if not zoom_meeting_on_check.is_set():
+                    break
+            except ValueError as e:
+                print(f"error in {__name__}.{write_metrics.__name__}: {e}")
+                break
 
 def graph_metrics(graph_dir: str, result_queue: mp.Queue, num_compute_processes) -> None:
     # get the time and size
@@ -219,24 +277,24 @@ def graph_metrics(graph_dir: str, result_queue: mp.Queue, num_compute_processes)
     fig.savefig(image_filename)
     print("finished " + graph_metrics.__name__)
 
-def graph_metrics(graph_dir: str, csv_filename: str) -> None:
+def graph_metrics2(graph_dir: str, csv_filename: str) -> None:
     # get the time and size
     times: List[datetime] = []
-    image_scores: Dict[MetricType, List[float]] = defaultdict(list)
+    image_scores: Dict[MetricType, List[float]] = {}
+    header = []
     
     print(f"started {__name__}.{graph_metrics.__name__}")
-    while True:
-        try:
-            metric_record = result_queue.get()
-            if type(metric_record) == int and metric_record == FINISH:
-                break
-            times.append(metric_record.time)
-            for metric_type in MetricType:
-                image_scores[metric_type].append(metric_record.metrics[metric_type])
-        except ValueError as e:
-            print(f"error in {__name__}.{graph_metrics.__name__}: {e}")
-            break
-
+    with open(csv_filename) as csvfile:
+        csvreader = csv.reader(csvfile)
+        for row in csvreader:
+            if row[0] == "time":
+                header = row
+                image_scores = {MetricType(metric_str_val): [] for metric_str_val in header[1:]}                                                       
+                continue
+            times.append(datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f'))
+            for idx in range(1, len(row)):
+                image_scores[MetricType(header[idx])].append(float(row[idx]))
+    
     # start plotting
     SMALL_SIZE = 250
 
