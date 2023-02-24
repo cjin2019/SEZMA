@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from datetime import datetime
-from typing import List
+from typing import Any, Dict, List
 
 from app2.network.parsing.zoom_packet import ZoomPacket
 from app2.network.parsing.packet_constants import RTPWrapper
@@ -14,5 +14,4 @@ class NetworkMetrics:
     packet_size: int
     expected_number_of_packets: int
     is_fec: bool
-
 
