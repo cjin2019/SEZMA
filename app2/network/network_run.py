@@ -23,6 +23,7 @@ class SpecialQueueValues(Enum):
 
 def pipeline_run(filename: str, zoom_meeting_check: mp.Event) -> None:
     local_machine_ip_addr = get_if_addr(conf.iface)
+    conf.use_pcap = True
     source = SniffSource(iface=conf.iface,
                          filter=f"udp and dst host {local_machine_ip_addr}")
     filterTransform = TransformDrain(get_zoom_packet)

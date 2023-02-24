@@ -99,6 +99,13 @@ listening on eth0, link-type EN10MB (Ethernet), capture size 65535 bytes
 
 #### FAQ
 ###### Failure in Installing Requirements
+
+###### Failure in Running
+1. `scapy.error.Scapy_Exception: Can't attach the BPF filter !`: `libpcap` may not have been installed. Run the following commands in terminal:
+    1. `brew update`
+    2. `brew install libpcap`
+    3. `scapy`: to open scapy in terminal
+    4. Once in the scapy terminal, run `conf.use_pcap = True`
 <!-- 1. What if you run into `ERROR: fontconfig not found using pkg-config` when running `./configure --enable-libfreetype --enable-libfontconfig`? 
 Make sure `fontconfig` and `pkg-config` is installed. You can install through `brew install fontconfig pkg-config` -->
 

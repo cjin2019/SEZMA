@@ -1,9 +1,7 @@
 import configparser
-import logging
 import multiprocessing as mp
 import os
 import time
-from ctypes import c_int
 from typing import Dict, Tuple
 
 import app2.network.network_run as network
@@ -93,12 +91,13 @@ def run_app2():
     video_log_process.start()
 
     video_capture_process.join()
-    compute_process.join()
     network_process.join()
     zoom_check_process.join()
     for compute_process in video_compute_processes:
         compute_process.join()
     video_log_process.join()
+
+    video.graph_metrics2(graph_dir=output_directory, csv_filename=video_csv_filename)
 
 if __name__ == "__main__":
     # run_app()
