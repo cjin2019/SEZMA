@@ -97,8 +97,9 @@ def run_app2():
         compute_process.join()
     video_log_process.join()
 
+    network.graph_metrics2(graph_dir=output_directory, csv_filename=network_csv_filename)
     video.graph_metrics2(graph_dir=output_directory, csv_filename=video_csv_filename)
 
 if __name__ == "__main__":
-    # run_app()
     run_app2()
+    
