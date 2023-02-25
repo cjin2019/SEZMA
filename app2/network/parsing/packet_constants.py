@@ -24,6 +24,5 @@ class ExceptionCodes(Enum):
     NOT_ENOUGH_DATA = "Not enough data"
     OTHER = "Other Error"
 
-
 def contains_value(cls: Type[IntEnum], val: int):
     return val in cls.__members__.values()
