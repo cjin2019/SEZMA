@@ -71,6 +71,11 @@ def write_metrics(filename: str, sink: QueueSink, zoom_meeting_check) -> None:
             csv_writer.writerow(metrics.__dict__.values())
 
 def get_zoom_packet(packet: Packet) -> Union[ZoomPacket,SpecialQueueValues]:
+    """
+    Param packet: scapy.Packet that has been filtered through
+    Returns ZoomPacket if it's a valid ZoomPacket and SpecialQueueValues.NON_ZOOM_PACKET
+    """
+    
     try:
         return ZoomPacket.parse(packet)
     except PacketException:
