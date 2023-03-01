@@ -76,7 +76,7 @@ def join_processes(*processes) -> None:
 
 def run_app():
     frame_rate, output_directory = open_config()
-    num_video_compute_processes = 3
+    num_video_compute_processes = 8
     
     video_data_queue = mp.Queue()
     video_metrics_queue = mp.Queue()
@@ -120,8 +120,40 @@ def run_app():
     # want to end process after finished graphing
     log_process.join()
 
+def run_network_only():
+    frame_rate, output_directory = open_config()
+    log_queue = mp.Queue()
+    event_check_zoom_meeting_open = mp.Event()
+
+    video_csv_filename = output_directory + "/video.csv"
+    network_csv_filename = output_directory + "/network.csv"
+    log_filename = output_directory + "/log.txt"
+
+    log_process = mp.Process(target=log_information, args=(log_queue, log_filename, event_check_zoom_meeting_open,1))
+    zoom_check_process = mp.Process(target=video.check_zoom_window_up, args=(log_queue, event_check_zoom_meeting_open,))
+
+    network_process = mp.Process(target=network.pipeline_run, args=(network_csv_filename, log_queue, event_check_zoom_meeting_open,))
+
+    start_processes(
+        log_process,
+        zoom_check_process,
+        network_process,
+    )
+
+    join_processes(
+        zoom_check_process,
+        network_process,
+    )
+
+    network.graph_metrics(graph_dir=output_directory, csv_filename=network_csv_filename, log_queue=log_queue)
+
+    # want to end process after finished graphing
+    log_process.join()
 if __name__ == "__main__":
-    run_app()
+    run_network_only()
+
+
+    # run_app()
     
 # OLD CODE
 

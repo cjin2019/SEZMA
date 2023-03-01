@@ -1,11 +1,13 @@
 import csv
 import logging
 import multiprocessing as mp
+import select
 from collections import defaultdict
 from datetime import datetime
 from enum import Enum
 from matplotlib import pyplot as plt
 from scapy.all import conf, get_if_addr, QueueSink, Packet, PipeEngine, SniffSource, TransformDrain
+from scapy.layers.inet import Ether, IP, UDP
 from typing import Dict, List, Union
 
 from app2.common.constants import SpecialQueueValues
@@ -16,7 +18,21 @@ from app2.network.parsing.zoom_packet import ZoomPacket
 
 log = logging.getLogger(__name__)
 
-
+def network_socket() -> None:
+    local_machine_ip_addr = get_if_addr(conf.iface)
+    conf.use_pcap = True
+    # Enable filtering: only Ether, IP and ICMP will be dissected
+    conf.layers.filter([IP, UDP])
+    # Disable filtering: restore everything to normal
+    conf.layers.unfilter()
+    s = conf.L2listen(iface=conf.iface, 
+                      filter=f"udp and dst host {local_machine_ip_addr}")
+    rlist = select.select([s], [], [])
+    queue_sink = QueueSink()
+    queue_sink.start()
+    while rlist:
+        queue_sink.push(s.recv())
+    queue_sink.stop()
 
 def pipeline_run(filename: str, log_queue, zoom_meeting_check: mp.Event) -> None:
     """
@@ -26,6 +42,10 @@ def pipeline_run(filename: str, log_queue, zoom_meeting_check: mp.Event) -> None
     """
     local_machine_ip_addr = get_if_addr(conf.iface)
     conf.use_pcap = True
+    # Enable filtering: only Ether, IP and UDP will be dissected
+    conf.layers.filter([Ether, IP, UDP])
+    # Disable filtering: restore everything to normal
+    # conf.layers.unfilter()
     source = SniffSource(iface=conf.iface,
                          filter=f"udp and dst host {local_machine_ip_addr}")
     filterTransform = TransformDrain(get_zoom_packet)
@@ -57,6 +77,7 @@ def write_metrics(filename: str, sink: QueueSink, zoom_meeting_check) -> None:
                 # check the get_zoom_packet logic --> but received a packet that is not Zoom
                 continue
             packet: "ZoomPacket" = received_object
+            # print(packet.time)
             metrics = NetworkMetrics(
                     frame_sequence_number = packet.frame_sequence,
                     packet_time = packet.time.get_datetime(),
@@ -69,6 +90,37 @@ def write_metrics(filename: str, sink: QueueSink, zoom_meeting_check) -> None:
                 start_time = packet.time.get_datetime()
                 csv_writer.writerow(metrics.__dict__.keys())
             csv_writer.writerow(metrics.__dict__.values())
+
+# def write_metrics(filename: str, sink: QueueSink, zoom_meeting_check) -> None:
+#     """
+#     Param: filename is the name of the file to write the network metrics into
+#     Param: sink contains the network metrics processed
+#     Param: zoom_meeting_on_check determines whether Zoom Meeting is still in progress on the user's laptop
+#     """
+#     start_time = None
+
+#     with open(filename, "w") as csv_file:
+#         csv_writer = csv.writer(csv_file)
+#         while zoom_meeting_check.is_set():
+#             received_object = sink.recv(timeout=5) # 5 second timeout this means there is only 1 person on call
+#             if received_object == None: # timeout reached 5 seconds
+#                 continue
+#             if type(received_object) == SpecialQueueValues and received_object == SpecialQueueValues.NON_ZOOM_PACKET:
+#                 # check the get_zoom_packet logic --> but received a packet that is not Zoom
+#                 continue
+#             packet: "ZoomPacket" = received_object
+#             metrics = NetworkMetrics(
+#                     frame_sequence_number = packet.frame_sequence,
+#                     packet_time = packet.time.get_datetime(),
+#                     packet_size = packet.size,
+#                     expected_number_of_packets= packet.number_of_packets_per_frame,
+#                     is_fec = packet.video_packet_type == RTPWrapper.FEC
+#             )
+
+#             if start_time == None:
+#                 start_time = packet.time.get_datetime()
+#                 csv_writer.writerow(metrics.__dict__.keys())
+#             csv_writer.writerow(metrics.__dict__.values())
 
 def get_zoom_packet(packet: Packet) -> Union[ZoomPacket,SpecialQueueValues]:
     """

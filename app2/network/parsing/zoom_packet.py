@@ -1,6 +1,6 @@
 from dataclasses import dataclass
 from scapy.all import Packet, conf, get_if_addr
-from scapy.layers.inet import IP, UDP
+from scapy.layers.inet import Ether, IP, UDP
 
 from app2.network.parsing.exceptions import PacketException
 from app2.network.parsing.packet_time import PacketTime
@@ -40,7 +40,7 @@ class ZoomPacket:
         try:
             # UDP Layer
             udp_layer: "UDPPacketHeader" = UDPPacketHeader(
-                time=PacketTime(float(packet.time)),
+                time=PacketTime(float(packet[IP].time)),
                 src_ip_address=packet[IP].src,
                 dst_ip_address=packet[IP].dst,
                 src_port=packet[UDP].sport,
