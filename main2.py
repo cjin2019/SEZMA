@@ -76,9 +76,9 @@ def join_processes(*processes) -> None:
 
 def run_app():
     frame_rate, output_directory = open_config()
-    num_video_compute_processes = 8
+    num_video_compute_processes = 6
     
-    video_data_queue = mp.Queue()
+    video_data_queue = mp.Queue(maxsize=20)
     video_metrics_queue = mp.Queue()
     log_queue = mp.Queue()
     event_check_zoom_meeting_open = mp.Event()
@@ -150,10 +150,7 @@ def run_network_only():
     # want to end process after finished graphing
     log_process.join()
 if __name__ == "__main__":
-    run_network_only()
-
-
-    # run_app()
+    run_app()
     
 # OLD CODE
 

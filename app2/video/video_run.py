@@ -13,7 +13,7 @@ from matplotlib import pyplot as plt
 from typing import Dict, List
 from PIL import Image
 
-from app2.common.constants import SpecialQueueValues
+from app2.common.constants import SpecialQueueValues, TIME_FORMAT
 from app2.video.metrics.image_score import MetricType, get_no_ref_score
 from app2.video.video_metrics import VideoMetrics
 
@@ -49,7 +49,7 @@ def check_zoom_window_up(log_queue, zoom_meeting_on: mp.Event) -> None:
         time.sleep(1)
     log_queue.put(f"finished {__name__}.{check_zoom_window_up.__name__}")
 
-def capture_image(window_num: int) -> Image.Image:
+def capture_image(window_num) -> Image.Image:
     """
     Param: window_num > 0
     Gets the raw image data of the window given window_num
@@ -70,29 +70,39 @@ def capture_image(window_num: int) -> Image.Image:
 def capture_images(frame_rate: float, data_queue, log_queue, zoom_meeting_on_check: mp.Event) -> None:
     """
     Params: frame_rate: frames per second
-    Param: data_queue is mp.Queue that contains the raw numpy array of video frames
+    Param: data_queue is mp.Queue that contains the raw numpy array of video frames and has maxsize set to a certain value
     Param: log_queue is mp.Queue that contains a string with log information or SpecialQueueValue
     Param: zoom_meeting_on_check determines whether Zoom Meeting is still in progress on the user's laptop
     """
     zoom_meeting_on_check.wait()
     log_queue.put(f"started {__name__}.{capture_images.__name__}")
     window_num: int = get_zoom_window_id()
+    
+    prev_check_time = datetime.now()
     time_between_frame: float = 1/frame_rate
+    # do binary search if really necessary
     
     while zoom_meeting_on_check.is_set(): 
         try:
             image_start_time = datetime.now()
             raw_data: Image.Image = capture_image(window_num)
-            data_queue.put((image_start_time, raw_data))
+            data_queue.put((image_start_time, raw_data), block = False)
             image_finish_time = datetime.now()
 
             diff = (image_finish_time - image_start_time).total_seconds()
             if(diff < time_between_frame):
                 time.sleep(time_between_frame - diff)
+
+        except queue.Full as e:
+            # update the frame rate to be lower (ie. halve it) every 10 seconds
+            if (datetime.now() - prev_check_time).total_seconds() > 10: 
+                prev_check_time = datetime.now()
+                time_between_frame = 2 * time_between_frame
         except Exception as e:
             if get_zoom_window_id() == -1:
                 # faster than checking if zoom_meeting_on_check is updated
                 break
+
             log_queue.put(f"exception in capture_images {type(e)}")
         
 
@@ -123,7 +133,7 @@ def compute_metrics(data_queue, result_queue, log_queue, zoom_meeting_on_check: 
             ))
         except Exception as e:
             if zoom_meeting_on_check.is_set():
-                log_queue.put(f"error in {__name__}.{compute_metrics.__name__}: {e}")
+                log_queue.put(f"error in {__name__}.{compute_metrics.__name__}: {e}, {type(e)}")
             break
 
     log_queue.put(f"finished {__name__}.{compute_metrics.__name__}")
@@ -151,7 +161,7 @@ def write_metrics(metric_queue, filename: str, log_queue, zoom_meeting_on_check:
                 if not started:
                     csv_writer.writerow(["time"] + [metric_type.value for metric_type in MetricType])
                     started = True
-                csv_writer.writerow([res.time] + [res.metrics[metric_type] for metric_type in MetricType])
+                csv_writer.writerow([res.time.strftime(TIME_FORMAT)] + [res.metrics[metric_type] for metric_type in MetricType])
 
                 count_images += 1
                 if count_images % num_image_process_print == 0:
@@ -183,7 +193,7 @@ def graph_metrics(graph_dir: str, csv_filename: str, log_queue) -> None:
                 header = row
                 image_scores = {MetricType(metric_str_val): [] for metric_str_val in header[1:]}                                                       
                 continue
-            times.append(datetime.strptime(row[0], '%Y-%m-%d %H:%M:%S.%f'))
+            times.append(datetime.strptime(row[0], TIME_FORMAT))
             for idx in range(1, len(row)):
                 image_scores[MetricType(header[idx])].append(float(row[idx]))
     
