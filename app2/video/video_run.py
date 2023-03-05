@@ -2,6 +2,7 @@
 import csv
 import multiprocessing as mp
 import numpy as np
+import os
 import queue
 import time
 import Quartz
@@ -45,6 +46,7 @@ def check_zoom_window_up(log_queue, zoom_meeting_on: mp.Event) -> None:
             not_on_count += 1
             if not_on_count >= max_not_on_count:
                 zoom_meeting_on.clear()
+                log_queue.put(f"Zoom window is closed")
                 break
         time.sleep(1)
     log_queue.put(f"finished {__name__}.{check_zoom_window_up.__name__}")
@@ -98,12 +100,13 @@ def capture_images(frame_rate: float, data_queue, log_queue, zoom_meeting_on_che
             if (datetime.now() - prev_check_time).total_seconds() > 10: 
                 prev_check_time = datetime.now()
                 time_between_frame = 2 * time_between_frame
+                log_queue.put(f"in {__name__}.{capture_images.__name__}, decreased frame rate to {time_between_frame}s between each frame capture")
         except Exception as e:
             if get_zoom_window_id() == -1:
                 # faster than checking if zoom_meeting_on_check is updated
+                log_queue.put(f"in {__name__}.{capture_images.__name__}, zoom window does not exist")
                 break
-
-            log_queue.put(f"exception in capture_images {type(e)}")
+            log_queue.put(f"exception in {__name__}.{capture_image.__name__}: {type(e)}, {e}")
         
 
     log_queue.put(f"finished {__name__}.{capture_images.__name__}")
@@ -134,7 +137,9 @@ def compute_metrics(data_queue, result_queue, log_queue, zoom_meeting_on_check: 
         except Exception as e:
             if zoom_meeting_on_check.is_set():
                 log_queue.put(f"error in {__name__}.{compute_metrics.__name__}: {e}, {type(e)}")
-            break
+            else:
+                log_queue.put(f"zoom meeting not set anymore, break: {__name__}.{compute_metrics.__name__}: {e}, {type(e)}")
+                break
 
     log_queue.put(f"finished {__name__}.{compute_metrics.__name__}")
 

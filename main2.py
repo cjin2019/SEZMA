@@ -1,8 +1,10 @@
 import configparser
 import multiprocessing as mp
 import os
+import psutil
 import queue
-from typing import Tuple
+import time
+from typing import List, Tuple
 
 import app2.network.network_run as network
 import app2.video.video_run as video
@@ -24,11 +26,10 @@ def open_config() -> Tuple[int,str]:
 
     return (frame_rate, output_directory)
 
-def log_information(data_queue, filename: str, zoom_meeting_on_check, num_processes_finished: int = 1, flush_every_nth_line: int = 1):
+def log_information(data_queue, filename: str, num_processes_finished: int = 1, flush_every_nth_line: int = 1):
     """
     Param: data_queue contains list of strings to log to a file
     Param: filename the name of the file to log in
-    Param: zoom_meeting_on_check determines whether Zoom Meeting is still in progress on the user's laptop
     Param: num_processes_finished is the number of processes that should finish before ending this function
     Param: flush_every_nth_line flushes n lines to the file
     """
@@ -52,6 +53,28 @@ def log_information(data_queue, filename: str, zoom_meeting_on_check, num_proces
                 if count_processes_done >= num_processes_finished:
                     break
 
+def monitor_process_usage(process_ids: List[int], filename: str, log_queue, zoom_meeting_on: mp.Event) -> None:
+    """
+    Param: process_ids contains list of ids to monitor for
+    Param: filename to store the monitor process metrics in
+    Param: log_queue to add to log
+    Param: zoom_meeting_on_check determines whether Zoom Meeting is still in progress on the user's laptop
+    """
+    zoom_meeting_on.wait()
+    log_queue.put(f"started {__name__}.{monitor_process_usage.__name__}")
+
+    processes: List[psutil.Process] = []
+    for pid in process_ids:
+        processes.append(psutil.Process(pid=pid))
+
+    with open(filename, mode="w") as file:
+        while zoom_meeting_on.is_set():
+            for proc in processes:
+                file.write(f"{proc.name()}, {proc.username}, {proc.memory_info_ex()}, {proc.cpu_percent() / psutil.cpu_count()}, {proc.cpu_times()}\n")
+            file.flush()
+            time.sleep(20) # collect data every 10 seconds
+    log_queue.put(f"started {__name__}.{monitor_process_usage.__name__}")
+
 def start_processes(*processes) -> None:
     """
     Param: processes either a multiprocess.Process or a List[multiprocess.Process]
@@ -62,6 +85,19 @@ def start_processes(*processes) -> None:
         else:
             for process in val:
                 process.start()
+
+def get_pids(*processes) -> List[int]:
+    """
+    Param: processes either a multiprocess.Process or a List[multiprocess.Process]
+    """
+    output = []
+    for val in processes:
+        if type(val) == mp.Process:
+            output.append(val.pid)
+        else:
+            for process in val:
+                output.append(process.pid)
+    return output
 
 def join_processes(*processes) -> None:
     """
@@ -87,7 +123,9 @@ def run_app():
     network_csv_filename = output_directory + "/network.csv"
     log_filename = output_directory + "/log.txt"
 
-    log_process = mp.Process(target=log_information, args=(log_queue, log_filename, event_check_zoom_meeting_open,2))
+    num_process_before_log_finished = 2
+
+    log_process = mp.Process(target=log_information, args=(log_queue, log_filename, num_process_before_log_finished,))
     zoom_check_process = mp.Process(target=video.check_zoom_window_up, args=(log_queue, event_check_zoom_meeting_open,))
     
     network_process = mp.Process(target=network.pipeline_run, args=(network_csv_filename, log_queue, event_check_zoom_meeting_open,))
@@ -106,12 +144,25 @@ def run_app():
         video_write_process,
     )
 
+    pids = get_pids(
+        zoom_check_process,
+        network_process,
+        video_capture_process,
+        video_compute_processes,
+        video_write_process,
+    )
+
+    monitor_filename = output_directory + "/monitor.txt"
+    monitor_process_usage_process = mp.Process(target=monitor_process_usage, args=(pids, monitor_filename, log_queue, event_check_zoom_meeting_open,))
+    monitor_process_usage_process.start()
+
     join_processes(
         zoom_check_process,
         network_process,
         video_capture_process,
         video_compute_processes,
         video_write_process,
+        monitor_process_usage_process,
     )
 
     network.graph_metrics(graph_dir=output_directory, csv_filename=network_csv_filename, log_queue=log_queue)
