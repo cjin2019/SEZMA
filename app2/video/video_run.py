@@ -48,7 +48,7 @@ def check_zoom_window_up(log_queue, zoom_meeting_on: mp.Event) -> None:
                 zoom_meeting_on.clear()
                 log_queue.put(f"Zoom window is closed")
                 break
-        time.sleep(1)
+        time.sleep(3)
     log_queue.put(f"finished {__name__}.{check_zoom_window_up.__name__}")
 
 def capture_image(window_num) -> Image.Image:

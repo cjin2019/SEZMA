@@ -1,14 +1,18 @@
 import configparser
+import csv
 import multiprocessing as mp
 import os
 import psutil
 import queue
 import time
+from datetime import datetime
 from typing import List, Tuple
 
+import app2.monitor as monitor
 import app2.network.network_run as network
 import app2.video.video_run as video
-from app2.common.constants import SpecialQueueValues
+from app2.common.constants import SpecialQueueValues, TIME_FORMAT
+
 
 def open_config() -> Tuple[int,str]:
     """
@@ -53,27 +57,33 @@ def log_information(data_queue, filename: str, num_processes_finished: int = 1, 
                 if count_processes_done >= num_processes_finished:
                     break
 
-def monitor_process_usage(process_ids: List[int], filename: str, log_queue, zoom_meeting_on: mp.Event) -> None:
-    """
-    Param: process_ids contains list of ids to monitor for
-    Param: filename to store the monitor process metrics in
-    Param: log_queue to add to log
-    Param: zoom_meeting_on_check determines whether Zoom Meeting is still in progress on the user's laptop
-    """
-    zoom_meeting_on.wait()
-    log_queue.put(f"started {__name__}.{monitor_process_usage.__name__}")
+# def monitor_process_usage(process_ids: List[int], filename: str, log_queue, zoom_meeting_on: mp.Event) -> None:
+#     """
+#     Param: process_ids contains list of ids to monitor for
+#     Param: filename to store the monitor process metrics in
+#     Param: log_queue to add to log
+#     Param: zoom_meeting_on_check determines whether Zoom Meeting is still in progress on the user's laptop
+#     """
+#     zoom_meeting_on.wait()
+#     log_queue.put(f"started {__name__}.{monitor_process_usage.__name__}")
 
-    processes: List[psutil.Process] = []
-    for pid in process_ids:
-        processes.append(psutil.Process(pid=pid))
+#     processes: List[psutil.Process] = []
+#     for pid in process_ids:
+#         processes.append(psutil.Process(pid=pid))
 
-    with open(filename, mode="w") as file:
-        while zoom_meeting_on.is_set():
-            for proc in processes:
-                file.write(f"{proc.name()}, {proc.username}, {proc.memory_info_ex()}, {proc.cpu_percent() / psutil.cpu_count()}, {proc.cpu_times()}\n")
-            file.flush()
-            time.sleep(20) # collect data every 10 seconds
-    log_queue.put(f"started {__name__}.{monitor_process_usage.__name__}")
+#     with open(filename, mode="w") as file:
+#         csv_writer = csv.writer(file)
+#         csv_writer.writerow(["time", "memory_percentage", "cpu_percentage"])
+#         mem_percentage = 0
+#         cpu_percentage = 0
+#         while zoom_meeting_on.is_set():
+#             for proc in processes:
+#                 mem_percentage += proc.memory_percent()
+#                 cpu_percentage += proc.cpu_percent()
+            
+#             csv_writer.writerow([datetime.now().strftime(TIME_FORMAT), mem_percentage, cpu_percentage])
+#             time.sleep(20) # collect data every 10 seconds
+#     log_queue.put(f"started {__name__}.{monitor_process_usage.__name__}")
 
 def start_processes(*processes) -> None:
     """
@@ -151,9 +161,10 @@ def run_app():
         video_compute_processes,
         video_write_process,
     )
+    pids += [os.getpid()]
 
-    monitor_filename = output_directory + "/monitor.txt"
-    monitor_process_usage_process = mp.Process(target=monitor_process_usage, args=(pids, monitor_filename, log_queue, event_check_zoom_meeting_open,))
+    monitor_filename = output_directory + "/monitor.csv"
+    monitor_process_usage_process = mp.Process(target=monitor.monitor_process_usage, args=(pids, monitor_filename, log_queue, event_check_zoom_meeting_open,))
     monitor_process_usage_process.start()
 
     join_processes(
@@ -167,6 +178,7 @@ def run_app():
 
     network.graph_metrics(graph_dir=output_directory, csv_filename=network_csv_filename, log_queue=log_queue)
     video.graph_metrics(graph_dir=output_directory, csv_filename=video_csv_filename, log_queue=log_queue)
+    monitor.graph_metrics(graph_dir=output_directory, csv_filename=monitor_filename, log_queue=log_queue)
 
     # want to end process after finished graphing
     log_process.join()

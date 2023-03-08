@@ -7,7 +7,7 @@ Only compatible for macOS 10.12+.
 
 ### Permisions
 
-In order to run this command line, you must run in `sudo`.
+In order to run this app, you must run in `sudo`.
 ### Packages
 
 <!-- #### FFmpeg (Might not need it if doing screencapture command instead)
@@ -55,11 +55,15 @@ listening on eth0, link-type EN10MB (Ethernet), capture size 65535 bytes
     2. If you are running into issues, run `sudo xcode-select --reset` then step 1.1.
 2. Test command: `swift`. It should output a Welcome message.  -->
 
+#### libpcap
+1. `brew install libpcap`. If you don't have `homebrew` installed, you can install with:
+   `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`[link](https://brew.sh/)
 #### Screen Capture 
 1. You will need permissions to screen capture from Terminal. 
     1. Go to Settings > Privacy & Security > Screen Recording. 
     2. Add Terminal to allowed applications.
 2. **NOTE: May be a security issue. Remove terminal from allowed apps when done using**
+
 
 #### Python >=3.8 <=3.11.
 1. Set up a virtual environment inside `videonetworkapp` directory using `python3 -m venv venv`
@@ -84,12 +88,13 @@ listening on eth0, link-type EN10MB (Ethernet), capture size 65535 bytes
 ### Commands to Run
 
 #### Set up configuration
-. Edit `config.ini` file to save to the data to appropriate location and run the screen capture for however long you like
+Edit `config.ini` file to save to the data to appropriate location and run the screen capture at an initial frame capture rate. The default frame capture rate may be too high for your laptop, in which case the frame rate will be
+reduced. 
 <!-- 1. Edit `config.json` file to save to the data to appropriate location and run the screen capture for however long you like -->
 <!-- 2. To get the appropriate device index, run `ffmpeg -f avfoundation -list_devices true -i ""`. Choose the number in `[]` that correspond to screen capture for video -->
 
 #### Run app end-to-end
-1. Start Zoom with one other person. 
+1. Start Zoom with at least one other person. 
 2. Once, you start up your Zoom call is ready, run `sudo python3 [/PATH/TO/]videonetworkapp/main2.py` to capture data and produce graphs of the data
 <!-- 2. Once, you start up your Zoom call is ready, run `python3 [/PATH/TO/]videonetworkapp/main.py` to capture data and produce graphs of the data  -->
 <!-- #### Capture Zoom Screen
