@@ -22,7 +22,7 @@ def get_zoom_window_id() -> int:
     """
     Returns the window ID of Zoom Meeting. Otherwise, -1 if there is no such meeting
     """
-    windows = Quartz.CGWindowListCopyWindowInfo(Quartz.kCGWindowListExcludeDesktopElements | Quartz.kCGWindowListOptionOnScreenOnly, Quartz.kCGNullWindowID)
+    windows = Quartz.CGWindowListCopyWindowInfo(Quartz.kCGWindowListExcludeDesktopElements | Quartz.kCGWindowListOptionAll, Quartz.kCGNullWindowID)
     for win in windows:
         if win[Quartz.kCGWindowOwnerName] == 'zoom.us' and win.get(Quartz.kCGWindowName, '') == 'Zoom Meeting':
             return int(win.get(Quartz.kCGWindowNumber, ''))
@@ -34,20 +34,24 @@ def check_zoom_window_up(log_queue, zoom_meeting_on: mp.Event) -> None:
     Param: zoom_meeting_on_check determines whether Zoom Meeting is still in progress on the user's laptop
     """
     log_queue.put(f"started {__name__}.{check_zoom_window_up.__name__}")
-    set_before_check = False
+    has_turned_on = False
     not_on_count = 0
     max_not_on_count = 3
 
     while True:
-        if get_zoom_window_id() != -1:
-            set_before_check = True
-            zoom_meeting_on.set()
-        elif set_before_check:
-            not_on_count += 1
-            if not_on_count >= max_not_on_count:
-                zoom_meeting_on.clear()
-                log_queue.put(f"Zoom window is closed")
-                break
+        if get_zoom_window_id() != -1: # zoom window up
+            if not has_turned_on: # hasn't turned on yet
+                has_turned_on = True
+                zoom_meeting_on.set()
+            else: # already turned on --> set to 0
+                not_on_count = 0 # reset to 0
+        else: # zoom window not up
+            if has_turned_on: # already turned on
+                not_on_count += 1 # increment each time it's off
+                if not_on_count >= max_not_on_count:
+                    zoom_meeting_on.clear()
+                    log_queue.put(f"in {__name__}.{check_zoom_window_up.__name__}, Zoom window is closed")
+                    break
         time.sleep(3)
     log_queue.put(f"finished {__name__}.{check_zoom_window_up.__name__}")
 
