@@ -32,7 +32,7 @@ def monitor_process_usage(process_ids: List[int], filename: str, log_queue, zoom
             cpu_percent_usage = 0
             battery_impact = 0
             for proc in processes:
-                if proc.status() != psutil.STATUS_ZOMBIE:
+                if psutil.pid_exists(proc.pid) and proc.status() != psutil.STATUS_ZOMBIE:
                     memory_percent_usage += proc.memory_percent()
                     cpu_percent_usage += proc.cpu_percent() / mp.cpu_count()
                     battery_impact += float(subprocess.run(['top', '-pid', str(proc.pid), '-l', '3', '-stats', 'power'], check=True, stdout=subprocess.PIPE).stdout.decode('UTF-8').split("\n")[-2])

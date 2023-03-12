@@ -128,7 +128,7 @@ def compute_metrics(data_queue, result_queue, log_queue, zoom_meeting_on_check: 
     # result_queue.put(["time"] + [metric_type.value for metric_type in MetricType])
     while True:
         try:
-            res = data_queue.get(timeout=5) 
+            res = data_queue.get(timeout=50) 
             
             image_capture_time, image_data = res
             image_data = np.asarray(image_data)

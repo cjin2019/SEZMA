@@ -47,25 +47,26 @@ def monitor_process_usage(process_ids: List[int], filename: str) -> None:
             memory_percent_usage = 0
             cpu_percent_usage = 0
             battery_impact = 0
-            for proc in processes:
-                if proc.status() != psutil.STATUS_ZOMBIE:
-                    memory_percent_usage += proc.memory_percent()
-                    cpu_percent_usage += proc.cpu_percent() / mp.cpu_count()
-                    battery_value: str = subprocess.run(['top', '-pid', str(proc.pid), '-l', '3', '-stats', 'power'], check=True, stdout=subprocess.PIPE).stdout.decode('UTF-8').split("\n")[-2]
-                    if battery_value == "":
-                        break
-                    battery_impact += float(battery_value)
-                    # print(subprocess.check_output(["top", "-pid", str(pid), "-l", str(3), "-stats" , "power", "|", "tail", "-1"]))
-            csv_writer.writerow([datetime.now().strftime(TIME_FORMAT), memory_percent_usage, cpu_percent_usage, battery_impact])
-            time.sleep(20) # collect data every 10 seconds
+            try: 
+                for proc in processes:
+                    if proc.status() != psutil.STATUS_ZOMBIE:
+                        memory_percent_usage += proc.memory_percent()
+                        cpu_percent_usage += proc.cpu_percent() / mp.cpu_count()
+                        battery_value: str = subprocess.run(['top', '-pid', str(proc.pid), '-l', '3', '-stats', 'power'], check=True, stdout=subprocess.PIPE).stdout.decode('UTF-8').split("\n")[-2]
+                        if battery_value == "":
+                            break
+                        battery_impact += float(battery_value)
+                        # print(subprocess.check_output(["top", "-pid", str(pid), "-l", str(3), "-stats" , "power", "|", "tail", "-1"]))
+                csv_writer.writerow([datetime.now().strftime(TIME_FORMAT), memory_percent_usage, cpu_percent_usage, battery_impact])
+                time.sleep(20) # collect data every 10 seconds
+            except psutil.NoSuchProcess as e:
+                break
 
-def graph_metrics(graph_dir: str, csv_filename: str, log_queue) -> None:
+def graph_metrics(graph_dir: str, csv_filename: str) -> None:
     """
     Param: graph_dir is the directory where to store the graph outputs
     Param: csv_filename is the name of the file to read the metrics from, assumes there is a header row
-    Param: log_queue is mp.Queue that contains a string with log information or SpecialQueueValue
     """
-    log_queue.put(f"started {__name__}.{graph_metrics.__name__}")
     times: List[datetime] = []
     process_data: Dict[str, List[float]] = {}
     process_metrics: List = []
@@ -104,10 +105,9 @@ def graph_metrics(graph_dir: str, csv_filename: str, log_queue) -> None:
         graph_dir + "/" + "process_usage_timeline.png"
     )
     fig.savefig(image_filename)
-    log_queue.put(f"finished {__name__}.{graph_metrics.__name__}")
-    log_queue.put(SpecialQueueValues.FINISH)
 
 if __name__ == "__main__":
+    ### wait until file exists with numbers
     _, output_directory = open_config()
 
     pid_csv = output_directory + "/pid.txt"
@@ -118,4 +118,4 @@ if __name__ == "__main__":
     
     process_usage_file = output_directory + "/process_usage.csv"
     monitor_process_usage(pids, process_usage_file)
-    # graph_metrics()
+    graph_metrics(output_directory, process_usage_file)

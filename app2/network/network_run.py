@@ -148,6 +148,8 @@ def group_by_frames(csv_filename: str, log_queue) -> Dict[bytes, List["NetworkMe
             if not started:
                 started = True
                 continue
+            
+            # account for 0 microsecond case
             network_metrics = NetworkMetrics(
                 frame_sequence_number=bytes(row[0][2:], 'utf-8'),
                 packet_time=datetime.strptime(row[1], '%Y-%m-%d %H:%M:%S.%f'),

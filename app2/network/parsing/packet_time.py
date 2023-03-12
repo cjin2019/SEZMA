@@ -1,7 +1,7 @@
 import datetime
 import time
 
-from app.analysis.common.data_time import DataTime
+from app2.common.data_time import DataTime
 
 """
 PacketTime represents the received time of the packet. This includes 
@@ -12,7 +12,7 @@ class PacketTime(DataTime):
     def __init__(self, seconds: float):
         self.__original_seconds = seconds
         self.__second_precision = time.localtime(seconds)
-        self.__microseconds = int((seconds * 10**6) % 10**6) + 1 # add 1 to not get 0 strptime error
+        self.__microseconds = int((seconds * 10**6) % 10**6)
 
     @property
     def second_precision(self) -> time.struct_time:
@@ -39,4 +39,4 @@ class PacketTime(DataTime):
     def __str__(self) -> str:
         return time.strftime(
             "%Y-%m-%d %H:%M:%S", self.__second_precision
-        ) + ".{:06d}".format(self.__microseconds)
+        ) + "." + str(self.__microseconds).zfill(6)
