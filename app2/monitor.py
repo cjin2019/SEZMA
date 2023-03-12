@@ -1,6 +1,7 @@
 import csv
 import multiprocessing as mp
 import psutil
+import subprocess
 import time
 from datetime import datetime
 from matplotlib import pyplot as plt
@@ -24,16 +25,19 @@ def monitor_process_usage(process_ids: List[int], filename: str, log_queue, zoom
 
     with open(filename, mode="w") as file:
         csv_writer = csv.writer(file)
-        csv_writer.writerow(["time", "memory_percentage", "cpu_percentage"])
+        csv_writer.writerow(["time", "memory_percentage", "cpu_percentage", "battery_impact"])
 
         while zoom_meeting_on.is_set():
             memory_percent_usage = 0
             cpu_percent_usage = 0
+            battery_impact = 0
             for proc in processes:
                 if proc.status() != psutil.STATUS_ZOMBIE:
                     memory_percent_usage += proc.memory_percent()
                     cpu_percent_usage += proc.cpu_percent() / mp.cpu_count()
-            csv_writer.writerow([datetime.now().strftime(TIME_FORMAT), memory_percent_usage, cpu_percent_usage])
+                    battery_impact += float(subprocess.run(['top', '-pid', str(proc.pid), '-l', '3', '-stats', 'power'], check=True, stdout=subprocess.PIPE).stdout.decode('UTF-8').split("\n")[-2])
+                    # print(subprocess.check_output(["top", "-pid", str(pid), "-l", str(3), "-stats" , "power", "|", "tail", "-1"]))
+            csv_writer.writerow([datetime.now().strftime(TIME_FORMAT), memory_percent_usage, cpu_percent_usage, battery_impact])
             time.sleep(20) # collect data every 10 seconds
     log_queue.put(f"finished {__name__}.{monitor_process_usage.__name__}")
 
