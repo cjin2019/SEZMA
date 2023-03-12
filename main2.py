@@ -162,10 +162,15 @@ def run_app():
         video_write_process,
     )
     pids += [os.getpid()]
+    pids = [str(pid) for pid in pids]
 
-    monitor_filename = output_directory + "/monitor.csv"
-    monitor_process_usage_process = mp.Process(target=monitor.monitor_process_usage, args=(pids, monitor_filename, log_queue, event_check_zoom_meeting_open,))
-    monitor_process_usage_process.start()
+    pid_csv = output_directory + "/pid.txt"
+    with open(pid_csv, "w") as file:
+        file.write(",".join(pids))
+
+    # monitor_filename = output_directory + "/monitor.csv"
+    # monitor_process_usage_process = mp.Process(target=monitor.monitor_process_usage, args=(pids, monitor_filename, log_queue, event_check_zoom_meeting_open,))
+    # monitor_process_usage_process.start()
 
     join_processes(
         zoom_check_process,
@@ -173,12 +178,12 @@ def run_app():
         video_capture_process,
         video_compute_processes,
         video_write_process,
-        monitor_process_usage_process,
+        # monitor_process_usage_process,
     )
 
     network.graph_metrics(graph_dir=output_directory, csv_filename=network_csv_filename, log_queue=log_queue)
     video.graph_metrics(graph_dir=output_directory, csv_filename=video_csv_filename, log_queue=log_queue)
-    monitor.graph_metrics(graph_dir=output_directory, csv_filename=monitor_filename, log_queue=log_queue)
+    # monitor.graph_metrics(graph_dir=output_directory, csv_filename=monitor_filename, log_queue=log_queue)
 
     # want to end process after finished graphing
     log_process.join()
