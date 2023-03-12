@@ -6,6 +6,7 @@ import psutil
 import queue
 import time
 from datetime import datetime
+from os.path import dirname, join
 from typing import List, Tuple
 
 import app2.monitor as monitor
@@ -19,7 +20,8 @@ def open_config() -> Tuple[int,str]:
     Returns duration in seconds, frame rate, output directory for graphs and logs
     """
     config_all = configparser.ConfigParser()
-    config_all.read('config.ini')
+    module_path = dirname(__file__)
+    config_all.read(join(module_path, "config.ini"))
     
     config = config_all["DEFAULT"]
     frame_rate: int = int(config["FrameRate"])
@@ -56,34 +58,6 @@ def log_information(data_queue, filename: str, num_processes_finished: int = 1, 
                 # want to continue running for logging in general
                 if count_processes_done >= num_processes_finished:
                     break
-
-# def monitor_process_usage(process_ids: List[int], filename: str, log_queue, zoom_meeting_on: mp.Event) -> None:
-#     """
-#     Param: process_ids contains list of ids to monitor for
-#     Param: filename to store the monitor process metrics in
-#     Param: log_queue to add to log
-#     Param: zoom_meeting_on_check determines whether Zoom Meeting is still in progress on the user's laptop
-#     """
-#     zoom_meeting_on.wait()
-#     log_queue.put(f"started {__name__}.{monitor_process_usage.__name__}")
-
-#     processes: List[psutil.Process] = []
-#     for pid in process_ids:
-#         processes.append(psutil.Process(pid=pid))
-
-#     with open(filename, mode="w") as file:
-#         csv_writer = csv.writer(file)
-#         csv_writer.writerow(["time", "memory_percentage", "cpu_percentage"])
-#         mem_percentage = 0
-#         cpu_percentage = 0
-#         while zoom_meeting_on.is_set():
-#             for proc in processes:
-#                 mem_percentage += proc.memory_percent()
-#                 cpu_percentage += proc.cpu_percent()
-            
-#             csv_writer.writerow([datetime.now().strftime(TIME_FORMAT), mem_percentage, cpu_percentage])
-#             time.sleep(20) # collect data every 10 seconds
-#     log_queue.put(f"started {__name__}.{monitor_process_usage.__name__}")
 
 def start_processes(*processes) -> None:
     """
