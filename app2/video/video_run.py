@@ -5,6 +5,7 @@ import numpy as np
 import os
 import queue
 import time
+import traceback
 import Quartz
 import Quartz.CoreGraphics as cg
 
@@ -65,12 +66,16 @@ def capture_image(window_num) -> Image.Image:
     Returns PIL Image of the window with window_num
     """
     cg_image = Quartz.CGWindowListCreateImage(Quartz.CGRectNull, Quartz.kCGWindowListOptionIncludingWindow, window_num, Quartz.kCGWindowImageBoundsIgnoreFraming)
+    if cg_image == None: # is fullscreen
+        cg_image = Quartz.CGWindowListCreateImage(Quartz.CGRectNull, Quartz.kCGWindowListOptionIncludingWindow | Quartz.kCGWindowListOptionOnScreenAboveWindow, window_num, Quartz.kCGWindowImageBoundsIgnoreFraming)
+        
     bpr = cg.CGImageGetBytesPerRow(cg_image)
     width = cg.CGImageGetWidth(cg_image)
     height = cg.CGImageGetHeight(cg_image)
 
     cg_dataprovider = cg.CGImageGetDataProvider(cg_image)
     cg_data = cg.CGDataProviderCopyData(cg_dataprovider)
+
     return Image.frombuffer("RGBA", (width, height), cg_data, "raw", "BGRA", bpr, 1)
 
 def capture_images(frame_rate: float, data_queue, log_queue, zoom_meeting_on_check: mp.Event) -> None:
@@ -110,7 +115,7 @@ def capture_images(frame_rate: float, data_queue, log_queue, zoom_meeting_on_che
                 # faster than checking if zoom_meeting_on_check is updated
                 log_queue.put(f"in {__name__}.{capture_images.__name__}, zoom window does not exist")
                 break
-            log_queue.put(f"exception in {__name__}.{capture_image.__name__}: {type(e)}, {e}")
+            log_queue.put(f"exception in {__name__}.{capture_image.__name__}: {type(e)}, {e}, {traceback.format_exc()}")
         
 
     log_queue.put(f"finished {__name__}.{capture_images.__name__}")
