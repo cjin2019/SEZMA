@@ -5,6 +5,11 @@
 ### OS
 Only compatible for macOS 10.12+.
 
+### Nuitka: Binarize Package
+
+1. `python3 -m pip install -U nuitka`: does not work for virtual environments
+
+
 ### Permisions
 
 In order to run this app, you must run in `sudo`.

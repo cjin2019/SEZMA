@@ -3,6 +3,7 @@ import multiprocessing as mp
 import os
 import queue
 from os.path import dirname, join
+import sys
 from typing import List, Tuple
 
 import app2.network.network_run as network
@@ -15,7 +16,7 @@ def open_config() -> Tuple[int,str]:
     Returns duration in seconds, frame rate, output directory for graphs and logs
     """
     config_all = configparser.ConfigParser()
-    module_path = dirname(__file__)
+    module_path = dirname(sys.argv[0])
     config_all.read(join(module_path, "config.ini"))
     
     config = config_all["DEFAULT"]
