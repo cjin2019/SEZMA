@@ -8,6 +8,8 @@ Only compatible for macOS 10.12+.
 ### Nuitka: Binarize Package
 
 1. `python3 -m pip install -U nuitka`: does not work for virtual environments
+2. Mac M1 command: `python3 -m nuitka --onefile --include-plugin-directory=app --include-data-files=/Users/carolinejin/Documents/meng_project/videonetworkapp/app/video/metrics/niqe_image_params.mat=app/video/metrics/niqe_image_params.mat --macos-create-app-bundle videonetworkapp.py` --> python used homebrew python3.9 (did not work with installed python in M1 due to recursion import error)
+3. Loaner Laptop: `python3 -m nuitka --follow-imports --include-plugin-directory=app videonetworkapp.py` (use the python provided in Mac Pro 2019)
 
 
 ### Permisions
