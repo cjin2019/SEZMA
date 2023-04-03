@@ -2,6 +2,7 @@ import configparser
 import csv
 import os
 import multiprocessing as mp
+import pgrep
 import psutil
 import subprocess
 import time
@@ -37,29 +38,32 @@ def monitor_process_usage(process_ids: List[int], filename: str) -> None:
 
     processes: List[psutil.Process] = []
     for pid in process_ids:
-        processes.append(psutil.Process(pid=pid))
+        try:
+            processes.append(psutil.Process(pid=pid))
+        except psutil.NoSuchProcess as e:
+            continue
 
     with open(filename, mode="w") as file:
         csv_writer = csv.writer(file)
-        csv_writer.writerow(["time", "memory_percentage", "cpu_percentage", "battery_impact"])
+        csv_writer.writerow(["time", "memory_percentage", "cpu_percentage"])
 
         while True:
             memory_percent_usage = 0
             cpu_percent_usage = 0
             battery_impact = 0
             try: 
+
                 for proc in processes:
                     if proc.status() != psutil.STATUS_ZOMBIE:
                         memory_percent_usage += proc.memory_percent()
-                        cpu_percent_usage += proc.cpu_percent() / mp.cpu_count()
-                        battery_value: str = subprocess.run(['top', '-pid', str(proc.pid), '-l', '3', '-stats', 'power'], check=True, stdout=subprocess.PIPE).stdout.decode('UTF-8').split("\n")[-2]
-                        if battery_value == "":
-                            break
-                        battery_impact += float(battery_value)
+                        #cpu_percent_usage += sum([proc.cpu_percent() / mp.cpu_count() for i in range(3)])/3
+                        #print("cpu percentage", proc.cpu_percent())
+                        cpu_value: str = subprocess.run(['top', '-pid', str(proc.pid), '-l', '3', '-stats', 'cpu'], check=True, stdout=subprocess.PIPE).stdout.decode('UTF-8').split("\n")[-2]
+                        # print(proc.pid, cpu_value)
+                        cpu_percent_usage += float(cpu_value) / mp.cpu_count()
                         # print(subprocess.check_output(["top", "-pid", str(pid), "-l", str(3), "-stats" , "power", "|", "tail", "-1"]))
-                csv_writer.writerow([datetime.now().strftime(TIME_FORMAT), memory_percent_usage, cpu_percent_usage, battery_impact])
-                time.sleep(20) # collect data every 10 seconds
-            except psutil.NoSuchProcess as e:
+                csv_writer.writerow([datetime.now().strftime(TIME_FORMAT), memory_percent_usage, cpu_percent_usage])
+            except Exception as e:
                 break
 
 def graph_metrics(graph_dir: str, csv_filename: str) -> None:
@@ -97,7 +101,6 @@ def graph_metrics(graph_dir: str, csv_filename: str) -> None:
     for row_idx, process_metric_type in enumerate(process_data):
             ax[row_idx].grid(True, color='r')
             ax[row_idx].plot_date(times, process_data[process_metric_type], ms=30)
-            ax[row_idx].set_title("Timeline of Frame Score")
             ax[row_idx].set_xlabel("Unix Time")
             ax[row_idx].set_ylabel(f"{process_metric_type}")
 
@@ -115,6 +118,8 @@ if __name__ == "__main__":
     with open(pid_csv, "r") as file:
         pids = file.readline().split(",")
     pids = [int(pid) for pid in pids]
+    
+    # pids = pgrep.pgrep("videonetwork") # for running the binary
     
     process_usage_file = output_directory + "/process_usage.csv"
     monitor_process_usage(pids, process_usage_file)

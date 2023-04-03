@@ -4,6 +4,7 @@ import os
 import queue
 from os.path import dirname, join
 import sys
+from paramiko import SSHClient, AutoAddPolicy
 from typing import List, Tuple
 
 import app.monitor as monitor
@@ -12,9 +13,9 @@ import app.video.video_run as video
 from app.common.constants import SpecialQueueValues, TIME_FORMAT
 
 
-def open_config() -> Tuple[int,str]:
+def open_config() -> Tuple[int,str, str]:
     """
-    Returns duration in seconds, frame rate, output directory for graphs and logs
+    Returns frame rate, output directory for graphs and logs, key_filepath for remote server
     """
     config_all = configparser.ConfigParser()
     module_path = dirname(sys.argv[0])
@@ -23,11 +24,12 @@ def open_config() -> Tuple[int,str]:
     config = config_all["DEFAULT"]
     frame_rate: int = int(config["FrameRate"])
     output_directory: str = config["OutputDirectory"]
+    key_filepath: str = config["KeyFilePath"]
 
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
 
-    return (frame_rate, output_directory)
+    return (frame_rate, output_directory, key_filepath)
 
 def log_information(data_queue, filename: str, num_processes_finished: int = 1, flush_every_nth_line: int = 1):
     """
@@ -91,8 +93,38 @@ def join_processes(*processes) -> None:
             for process in val:
                 process.join()
 
+def send_results_to_server(local_directory, key_filepath, log_queue) -> None:
+    """
+    Param: local_directory directory where the graphs are stored
+    Param: key_filepath is where the pem file to access the server is stored
+    Param: log_queue is mp.Queue that contains a string with log information
+    """
+    log_queue.put(f"started  {__name__}.{send_results_to_server.__name__}")
+    remote_directory = "/home/ubuntu/" + local_directory[local_directory.rindex("/")+1:]
+
+    client = SSHClient()
+    client.load_system_host_keys()
+    client.set_missing_host_key_policy(AutoAddPolicy())
+
+    client.connect(hostname='128.52.141.6', username='ubuntu', key_filename=key_filepath)
+
+    sftp = client.open_sftp()
+    try:
+        sftp.chdir(remote_directory)  # Test if remote_path exists
+    except IOError:
+        sftp.mkdir(remote_directory)  # Create remote_path
+        sftp.chdir(remote_directory)
+
+    for filename in os.listdir(local_directory):
+        if filename[-3:] == "png":
+            sftp.put(local_directory + "/" + filename, remote_directory + "/" + filename)
+
+    sftp.close()
+    log_queue.put(f"finished  {__name__}.{send_results_to_server.__name__}")
+    log_queue.put(SpecialQueueValues.FINISH)
+
 def run_app():
-    frame_rate, output_directory = open_config()
+    frame_rate, output_directory, key_filepath = open_config()
     num_video_compute_processes = 6
     
     video_data_queue = mp.Queue(maxsize=20)
@@ -104,17 +136,31 @@ def run_app():
     network_csv_filename = output_directory + "/network.csv"
     log_filename = output_directory + "/log.txt"
 
-    num_process_before_log_finished = 2
+    num_process_before_log_finished = 3 # for graphing and then 
 
-    log_process = mp.Process(target=log_information, args=(log_queue, log_filename, num_process_before_log_finished,))
-    zoom_check_process = mp.Process(target=video.check_zoom_window_up, args=(log_queue, event_check_zoom_meeting_open,))
+    log_process = mp.Process(
+        target=log_information, 
+        args=(log_queue, log_filename, num_process_before_log_finished,))
+    zoom_check_process = mp.Process(
+        target=video.check_zoom_window_up, 
+        args=(log_queue, event_check_zoom_meeting_open,))
     
-    network_process = mp.Process(target=network.pipeline_run, args=(network_csv_filename, log_queue, event_check_zoom_meeting_open,))
+    network_process = mp.Process(
+        target=network.pipeline_run, 
+        args=(network_csv_filename, log_queue, event_check_zoom_meeting_open,))
     
-    video_capture_process = mp.Process(target=video.capture_images, args=(frame_rate, video_data_queue, log_queue, event_check_zoom_meeting_open,))
-    video_compute_processes = [mp.Process(target=video.compute_metrics, args=(video_data_queue, video_metrics_queue, log_queue, event_check_zoom_meeting_open,)) for i in range(num_video_compute_processes)]
+    video_capture_process = mp.Process(
+        target=video.capture_images, 
+        args=(frame_rate, video_data_queue, log_queue, event_check_zoom_meeting_open,))
+    video_compute_processes = [
+        mp.Process(
+            target=video.compute_metrics, 
+            args=(video_data_queue, video_metrics_queue, log_queue, event_check_zoom_meeting_open,)) 
+        for i in range(num_video_compute_processes)]
     # done processing when compute_process is done
-    video_write_process = mp.Process(target=video.write_metrics, args=(video_metrics_queue, video_csv_filename, log_queue, event_check_zoom_meeting_open,))
+    video_write_process = mp.Process(
+        target=video.write_metrics, 
+        args=(video_metrics_queue, video_csv_filename, log_queue, event_check_zoom_meeting_open,))
 
     start_processes(
         log_process,
@@ -157,81 +203,9 @@ def run_app():
     # monitor.graph_metrics(graph_dir=output_directory, csv_filename=monitor_filename, log_queue=log_queue)
 
     # want to end process after finished graphing
+    send_results_to_server(output_directory, key_filepath, log_queue)
+
     log_process.join()
 
-def run_network_only():
-    frame_rate, output_directory = open_config()
-    log_queue = mp.Queue()
-    event_check_zoom_meeting_open = mp.Event()
-
-    video_csv_filename = output_directory + "/video.csv"
-    network_csv_filename = output_directory + "/network.csv"
-    log_filename = output_directory + "/log.txt"
-
-    log_process = mp.Process(target=log_information, args=(log_queue, log_filename, event_check_zoom_meeting_open,1))
-    zoom_check_process = mp.Process(target=video.check_zoom_window_up, args=(log_queue, event_check_zoom_meeting_open,))
-
-    network_process = mp.Process(target=network.pipeline_run, args=(network_csv_filename, log_queue, event_check_zoom_meeting_open,))
-
-    start_processes(
-        log_process,
-        zoom_check_process,
-        network_process,
-    )
-
-    join_processes(
-        zoom_check_process,
-        network_process,
-    )
-
-    network.graph_metrics(graph_dir=output_directory, csv_filename=network_csv_filename, log_queue=log_queue)
-
-    # want to end process after finished graphing
-    log_process.join()
 if __name__ == "__main__":
     run_app()
-    
-# OLD CODE
-
-# def run_app():
-
-#     while video.get_zoom_window_id() == -1:
-#         time.sleep(0.5)
-#     duration_seconds, frame_rate, output_directory = open_config()
-
-#     # log_filename = output_directory + "/logging.txt"
-#     # logging.basicConfig(filename=log_filename, level=logging.INFO)
-#     # set up structures 
-#     # network
-
-#     manager = mp.Manager()
-#     packet_queue = manager.Queue()
-#     network_metrics = manager.list()
-
-#     frame_queue = manager.Queue()
-#     video_metrics = manager.Queue()
-
-#     num_compute_video_processes = 3
-
-#     capture_network_process = mp.Process(target=network.capture_packets, args=(packet_queue, duration_seconds))
-#     capture_video_process = mp.Process(target=video.capture_images, args=(frame_rate, duration_seconds, frame_queue,))
-#     compute_network_metrics_process = mp.Process(target=network.compute_metrics, args=(packet_queue, network_metrics,))
-#     compute_video_metrics_processes = [mp.Process(target=video.compute_metrics, args=(frame_queue, video_metrics,)) for i in range(num_compute_video_processes)]
-#     graph_video_metrics_process = mp.Process(target=video.graph_metrics, args=(output_directory, video_metrics,))
-
-#     # start compute first since it takes the longest
-#     for process in compute_video_metrics_processes:
-#         process.start()
-#     capture_network_process.start()
-#     capture_video_process.start()
-#     compute_network_metrics_process.start()
-#     graph_video_metrics_process.start()
-
-#     capture_network_process.join()
-#     compute_network_metrics_process.join()
-#     network.graph_metrics(graph_dir=output_directory, metric_output=network_metrics)
-
-#     capture_video_process.join()
-#     for process in compute_video_metrics_processes:
-#         process.join()
-#     graph_video_metrics_process.join()

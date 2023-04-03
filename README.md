@@ -5,29 +5,25 @@
 ### OS
 Only compatible for macOS 10.12+.
 
+### How to Run the App
+1. On Terminal, `cd /path/to/videonetworkapp`.
+2. `sudo ./videonetworkapp`
+
 ### Nuitka: Binarize Package
 
 1. `python3 -m pip install -U nuitka`: does not work for virtual environments
 2. Mac M1 command: `python3 -m nuitka --onefile --include-plugin-directory=app --include-data-files=/Users/carolinejin/Documents/meng_project/videonetworkapp/app/video/metrics/niqe_image_params.mat=app/video/metrics/niqe_image_params.mat --macos-create-app-bundle videonetworkapp.py` --> python used homebrew python3.9 (did not work with installed python in M1 due to recursion import error)
-3. Loaner Laptop: `python3 -m nuitka --follow-imports --include-plugin-directory=app videonetworkapp.py` (use the python provided in Mac Pro 2019)
+3. Macbook Pro Laptop: `python3 -m nuitka --follow-imports --include-plugin-directory=app videonetworkapp.py` (use the python provided in Mac Pro 2019)
 
 
 ### Permisions
 
-In order to run this app, you must run in `sudo`.
-### Packages
-
-<!-- #### FFmpeg (Might not need it if doing screencapture command instead)
-1. `git clone git@github.com:FFmpeg/FFmpeg.git`.
-2. Before, installing add the following changes from `0001-added-milliseconds-to-filename.patch`.
-3. `cd FFmpeg`: enter FFmpeg library to install
-4. Follow installation from `ffmpeg` library: [link](https://github.com/FFmpeg/FFmpeg/blob/master/INSTALL.md). 
-    1. To enable `libfontconfig`, install package libfontconfig1-dev
-    2. Follow `./configure --help` to get some of the enabled extensions. In order to get drawtext filter to work, run `./configure --enable-libfreetype --enable-libfontconfig`.  -->
+In order to run this app, you must run in `sudo` on Terminal.
+### Installation
 
 **NOTE: in [] should be changed to your config**
 
-#### tcpdump
+<!-- #### tcpdump
 1. Test command: `sudo tcpdump`. It should output the current network stats, like below
 ```
 tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
@@ -36,7 +32,7 @@ listening on eth0, link-type EN10MB (Ethernet), capture size 65535 bytes
 21:02:19.113888 IP 216.239.35.0.ntp > test33.ntp: NTPv4, Server, length 48
 21:02:20.150347 IP test33.ntp > 216.239.35.0.ntp: NTPv4, Client, length 48
 21:02:20.150991 IP 216.239.35.0.ntp > test33.ntp: NTPv4, Server, length 48
-``` 
+```  -->
 
 <!-- #### tcpdump
 1. Enable `sudo` cmd without having to input password. Following steps are from this [blog](http://www.linuxtechnotes.com/2015/10/how-to-give-sudo-access-to-user-run.html) 
@@ -77,7 +73,7 @@ listening on eth0, link-type EN10MB (Ethernet), capture size 65535 bytes
 2. Activate the virtual environment with `source [/PATH/TO/]venv/bin/activate`. Following python packages are installed inside the virtual environment, make sure your virtual environment is activated.
 3. If you want to have multiple Python versions, you can follow [this](https://stackoverflow.com/questions/36968425/how-can-i-install-multiple-versions-of-python-on-latest-os-x-and-use-them-in-par)
 
-##### Install external packages
+##### Install Python External Packages
 1. Make sure your virtual environment is activated (`source [/PATH/TO/]venv/bin/activate`)
 2. Inside your virtual environment, run `python3 -m pip install -r requirements.txt`
 
@@ -102,7 +98,7 @@ reduced.
 
 #### Run app end-to-end
 1. Start Zoom with at least one other person. 
-2. Once, you start up your Zoom call is ready, run `sudo python3 [/PATH/TO/]videonetworkapp/main2.py` to capture data and produce graphs of the data
+2. Once, you start up your Zoom call is ready, run `sudo python3 [/PATH/TO/]videonetworkapp/videonetworkapp.py` to capture data and produce graphs of the data
 <!-- 2. Once, you start up your Zoom call is ready, run `python3 [/PATH/TO/]videonetworkapp/main.py` to capture data and produce graphs of the data  -->
 <!-- #### Capture Zoom Screen
 1. Activate virtual environment with `source /path/to/env/bin/activate`
