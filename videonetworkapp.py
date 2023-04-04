@@ -12,6 +12,7 @@ import app.network.network_run as network
 import app.video.video_run as video
 from app.common.constants import SpecialQueueValues, TIME_FORMAT
 
+NO_KEYFILE_PATH = "NOT GIVEN"
 
 def open_config() -> Tuple[int,str, str]:
     """
@@ -136,7 +137,7 @@ def run_app():
     network_csv_filename = output_directory + "/network.csv"
     log_filename = output_directory + "/log.txt"
 
-    num_process_before_log_finished = 3 # for graphing and then 
+    num_process_before_log_finished = 3 if key_filepath != NO_KEYFILE_PATH else 2 # for graphing and then send results to server 
 
     log_process = mp.Process(
         target=log_information, 
@@ -185,10 +186,6 @@ def run_app():
     with open(pid_csv, "w") as file:
         file.write(",".join(pids))
 
-    # monitor_filename = output_directory + "/monitor.csv"
-    # monitor_process_usage_process = mp.Process(target=monitor.monitor_process_usage, args=(pids, monitor_filename, log_queue, event_check_zoom_meeting_open,))
-    # monitor_process_usage_process.start()
-
     join_processes(
         zoom_check_process,
         network_process,
@@ -200,10 +197,10 @@ def run_app():
 
     network.graph_metrics(graph_dir=output_directory, csv_filename=network_csv_filename, log_queue=log_queue)
     video.graph_metrics(graph_dir=output_directory, csv_filename=video_csv_filename, log_queue=log_queue)
-    # monitor.graph_metrics(graph_dir=output_directory, csv_filename=monitor_filename, log_queue=log_queue)
 
     # want to end process after finished graphing
-    send_results_to_server(output_directory, key_filepath, log_queue)
+    if key_filepath != NO_KEYFILE_PATH:
+        send_results_to_server(output_directory, key_filepath, log_queue)
 
     log_process.join()
 

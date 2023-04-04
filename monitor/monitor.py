@@ -113,13 +113,13 @@ if __name__ == "__main__":
     ### wait until file exists with numbers
     _, output_directory = open_config()
 
-    pid_csv = output_directory + "/pid.txt"
-    pids = []
-    with open(pid_csv, "r") as file:
-        pids = file.readline().split(",")
-    pids = [int(pid) for pid in pids]
+    # pid_csv = output_directory + "/pid.txt"
+    # pids = []
+    # with open(pid_csv, "r") as file:
+    #     pids = file.readline().split(",")
+    # pids = [int(pid) for pid in pids]
     
-    # pids = pgrep.pgrep("videonetwork") # for running the binary
+    pids = pgrep.pgrep("videonetwork") # for running the binary
     
     process_usage_file = output_directory + "/process_usage.csv"
     monitor_process_usage(pids, process_usage_file)
