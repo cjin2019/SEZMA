@@ -5,17 +5,6 @@
 ### OS
 Only compatible for macOS 10.12+.
 
-### How to Run the App
-1. On Terminal, `cd /path/to/videonetworkapp`.
-2. `sudo ./videonetworkapp`
-
-### Nuitka: Binarize Package
-
-1. `python3 -m pip install -U nuitka`: does not work for virtual environments
-2. Mac M1 command: `python3 -m nuitka --onefile --include-plugin-directory=app --include-data-files=/Users/carolinejin/Documents/meng_project/videonetworkapp/app/video/metrics/niqe_image_params.mat=app/video/metrics/niqe_image_params.mat --macos-create-app-bundle videonetworkapp.py` --> python used homebrew python3.9 (did not work with installed python in M1 due to recursion import error)
-3. Macbook Pro Laptop: `python3 -m nuitka --follow-imports --include-plugin-directory=app videonetworkapp.py` (use the python provided in Mac Pro 2019)
-
-
 ### Permisions
 
 In order to run this app, you must run in `sudo` on Terminal.
@@ -68,37 +57,55 @@ listening on eth0, link-type EN10MB (Ethernet), capture size 65535 bytes
 2. **NOTE: May be a security issue. Remove terminal from allowed apps when done using**
 
 
-#### Python >=3.8 <=3.11.
-1. Set up a virtual environment inside `videonetworkapp` directory using `python3 -m venv venv`
+### How to Run the App From Binary
+1. On Terminal, `cd /path/to/videonetworkapp` or `cd /path/to/videonetworkapp.bin`
+2. `sudo /path/to/videonetworkapp` or `sudo /path/to/videonetworkapp.bin`
+
+### How to Run App from Codebase
+
+#### Install
+
+1. Requires >= 3.8 and <= 3.9
+2. Run `./install.sh`
+
+#### Run
+
+1. Edit `config.ini` file to save to the data to appropriate location, file path of the key file of centralized server to send results, and run the screen capture at an initial frame capture rate. The default frame capture rate may be too high for your laptop, in which case the frame rate will be
+reduced.  
+2. `sudo ./run.sh`
+
+#### Monitor Run
+
+1. `sudo ./monitor.sh`
+
+### Binarize Python Codebase with Nuitka
+
+1. Activate your virtual environment. `source venv/bin/activate`.
+2. If nuitka not installed, run `python3 -m pip install -U nuitka`
+3. Mac M1 command: `python3 -m nuitka --onefile --include-plugin-directory=app --include-data-files=/Users/carolinejin/Documents/meng_project/videonetworkapp/app/video/metrics/niqe_image_params.mat=app/video/metrics/niqe_image_params.mat --macos-create-app-bundle videonetworkapp.py` --> python used homebrew python3.9 (did not work with installed python in M1 due to recursion import error)
+4. Macbook Intel Laptop: `python3 -m nuitka --follow-imports --include-plugin-directory=app videonetworkapp.py`
+
+<!-- #### Python 3.9. -->
+<!-- 1. Set up a virtual environment inside `videonetworkapp` directory using `python3 -m venv venv`
 2. Activate the virtual environment with `source [/PATH/TO/]venv/bin/activate`. Following python packages are installed inside the virtual environment, make sure your virtual environment is activated.
 3. If you want to have multiple Python versions, you can follow [this](https://stackoverflow.com/questions/36968425/how-can-i-install-multiple-versions-of-python-on-latest-os-x-and-use-them-in-par)
 
-##### Install Python External Packages
-1. Make sure your virtual environment is activated (`source [/PATH/TO/]venv/bin/activate`)
-2. Inside your virtual environment, run `python3 -m pip install -r requirements.txt`
-
-<!-- ##### setuptools 
-1. `pip3 install setuptools`
-
-##### scapy
-1. Follow the download and installation guidelines [here](https://scapy.readthedocs.io/en/latest/installation.html#installing-scapy-v2-x)
-    1. `pip3 install scapy` inside your virtual environment `venv` -->
 
 ##### videonetworkapp
 1. Make sure your virtual environment is activated (`source [/PATH/TO/]venv/bin/activate`)
 <!-- 2. Inside `videonetworkapp/`, run `python3 -m pip install -e .` -->
 
-### Commands to Run
+<!-- ### Commands to Run
 
 #### Set up configuration
 Edit `config.ini` file to save to the data to appropriate location and run the screen capture at an initial frame capture rate. The default frame capture rate may be too high for your laptop, in which case the frame rate will be
-reduced. 
+reduced.  -->
 <!-- 1. Edit `config.json` file to save to the data to appropriate location and run the screen capture for however long you like -->
 <!-- 2. To get the appropriate device index, run `ffmpeg -f avfoundation -list_devices true -i ""`. Choose the number in `[]` that correspond to screen capture for video -->
 
-#### Run app end-to-end
+<!-- #### Run app end-to-end
 1. Start Zoom with at least one other person. 
-2. Once, you start up your Zoom call is ready, run `sudo python3 [/PATH/TO/]videonetworkapp/videonetworkapp.py` to capture data and produce graphs of the data
+2. Once, you start up your Zoom call is ready, run `sudo python3 [/PATH/TO/]videonetworkapp/videonetworkapp.py` to capture data and produce graphs of the data -->
 <!-- 2. Once, you start up your Zoom call is ready, run `python3 [/PATH/TO/]videonetworkapp/main.py` to capture data and produce graphs of the data  -->
 <!-- #### Capture Zoom Screen
 1. Activate virtual environment with `source /path/to/env/bin/activate`
