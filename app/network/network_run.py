@@ -6,11 +6,20 @@ from collections import defaultdict
 from datetime import datetime
 from enum import Enum
 from matplotlib import pyplot as plt
-from scapy.all import conf, get_if_addr, QueueSink, Packet, PipeEngine, SniffSource, TransformDrain
-from scapy.layers.inet import Ether, IP, UDP
+
+# suppressing the scapy warnings!
+
+logging.getLogger("scapy.runtime").setLevel(logging.ERROR)
+import warnings
+from cryptography.utils import CryptographyDeprecationWarning
+warnings.filterwarnings("ignore", category=CryptographyDeprecationWarning)
+
+from scapy.all import *
+from scapy.layers.inet import *
+
 from typing import Dict, List, Union
 
-from app.common.constants import SpecialQueueValues
+from app.common.constants import SpecialQueueValues, get_timeformat
 from app.network.network_metrics import NetworkMetrics
 from app.network.parsing.exceptions import PacketException
 from app.network.parsing.packet_constants import RTPWrapper
@@ -152,7 +161,7 @@ def group_by_frames(csv_filename: str, log_queue) -> Dict[bytes, List["NetworkMe
             # account for 0 microsecond case
             network_metrics = NetworkMetrics(
                 frame_sequence_number=bytes(row[0][2:], 'utf-8'),
-                packet_time=datetime.strptime(row[1], '%Y-%m-%d %H:%M:%S.%f'),
+                packet_time=datetime.strptime(row[1], get_timeformat(row[1])),
                 packet_size=int(row[2]),
                 expected_number_of_packets=int(row[3]),
                 is_fec=row[4] == "True"

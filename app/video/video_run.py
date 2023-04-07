@@ -210,7 +210,14 @@ def graph_metrics(graph_dir: str, csv_filename: str, log_queue) -> None:
             times.append(datetime.strptime(row[0], TIME_FORMAT))
             for idx in range(1, len(row)):
                 image_scores[MetricType(header[idx])].append(float(row[idx]))
-    
+
+            # fix the issue where laplacian scores are too high (ie. in 1000s)
+            if image_scores[MetricType.LAPLACIAN][-1] > 600:
+                # remove the last entry
+                for metric_type in image_scores:
+                    image_scores[metric_type].pop()
+                times.pop()
+                break
     # start plotting
     SMALL_SIZE = 250
 
@@ -236,6 +243,55 @@ def graph_metrics(graph_dir: str, csv_filename: str, log_queue) -> None:
     fig.savefig(image_filename)
     log_queue.put(f"finished {__name__}.{graph_metrics.__name__}")
     log_queue.put(SpecialQueueValues.FINISH)
+
+def graph_metrics_no_logging(graph_dir: str, csv_filename: str) -> None:
+    # get the time and size
+    times: List[datetime] = []
+    image_scores: Dict[MetricType, List[float]] = {}
+    header = []
+    
+    with open(csv_filename) as csvfile:
+        csvreader = csv.reader(csvfile)
+        for row in csvreader:
+            if row[0] == "time":
+                header = row
+                image_scores = {MetricType(metric_str_val): [] for metric_str_val in header[1:]}                                                       
+                continue
+            times.append(datetime.strptime(row[0], TIME_FORMAT))
+            for idx in range(1, len(row)):
+                image_scores[MetricType(header[idx])].append(float(row[idx]))
+
+            # fix the issue where laplacian scores are too high (ie. in 1000s)
+            if image_scores[MetricType.LAPLACIAN][-1] > 600:
+                # remove the last entry
+                for metric_type in image_scores:
+                    image_scores[metric_type].pop()
+                times.pop()
+                break
+    # start plotting
+    SMALL_SIZE = 200
+
+    plt.rc("font", size=SMALL_SIZE)  # controls default text sizes
+    plt.rc("axes", titlesize=SMALL_SIZE)  # fontsize of the axes title
+    plt.rc("axes", labelsize=SMALL_SIZE)  # fontsize of the x and y labels
+    plt.rc("xtick", labelsize=SMALL_SIZE)  # fontsize of the tick labels
+    plt.rc("ytick", labelsize=SMALL_SIZE)  # fontsize of the tick labels
+
+    fig, ax = plt.subplots(len(MetricType), 1, figsize=(200, 100))
+    fig.tight_layout(pad=5.0)
+
+    for row_idx, metric_type in enumerate(MetricType):
+        ax[row_idx].grid(True, color='r')
+        ax[row_idx].plot_date(times, image_scores[metric_type], ms=30)
+        ax[row_idx].set_title("Timeline of Frame Score")
+        ax[row_idx].set_xlabel("Unix Time")
+        ax[row_idx].set_ylabel(f"{metric_type.value} Score")
+
+    image_filename = (
+        graph_dir + "/" + "frame_timeline.png"
+    )
+    fig.savefig(image_filename)
+
 
 
 #### OLD CODE

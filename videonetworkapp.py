@@ -10,11 +10,12 @@ from typing import List, Tuple
 import app.monitor as monitor
 import app.network.network_run as network
 import app.video.video_run as video
+import app.video.video_run2 as video2
 from app.common.constants import SpecialQueueValues, TIME_FORMAT
 
 NO_KEYFILE_PATH = "NOT GIVEN"
 
-def open_config() -> Tuple[int,str, str]:
+def open_config() -> Tuple[float,str, str, bool]:
     """
     Returns frame rate, output directory for graphs and logs, key_filepath for remote server
     """
@@ -23,14 +24,15 @@ def open_config() -> Tuple[int,str, str]:
     config_all.read(join(module_path, "config.ini"))
     
     config = config_all["DEFAULT"]
-    frame_rate: int = int(config["FrameRate"])
+    frame_rate: float = float(config["FrameRate"])
     output_directory: str = config["OutputDirectory"]
     key_filepath: str = config["KeyFilePath"]
+    send_existing_output: bool = "SendOutputToServer" in config
 
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
 
-    return (frame_rate, output_directory, key_filepath)
+    return (frame_rate, output_directory, key_filepath, send_existing_output)
 
 def log_information(data_queue, filename: str, num_processes_finished: int = 1, flush_every_nth_line: int = 1):
     """
@@ -54,17 +56,25 @@ def log_information(data_queue, filename: str, num_processes_finished: int = 1, 
 
                     if line_count == 0:
                         file.flush()
+                data_queue.task_done()
             except queue.Empty:
                 # want to continue running for logging in general
                 if count_processes_done >= num_processes_finished:
                     break
+        
+        file.write("all processes finished\n")
+        file.flush()
+
 
 def start_processes(*processes) -> None:
     """
-    Param: processes either a multiprocess.Process or a List[multiprocess.Process]
+    Param: processes either a Process or a List[Process]
+    Process is either multiprocess.Process or spawned process 
+    multiprocess.get_context("spawn").Process
     """
     for val in processes:
-        if type(val) == mp.Process:
+        print(type(val))
+        if type(val) != list:
             val.start()
         else:
             for process in val:
@@ -76,7 +86,7 @@ def get_pids(*processes) -> List[int]:
     """
     output = []
     for val in processes:
-        if type(val) == mp.Process:
+        if type(val) != list:
             output.append(val.pid)
         else:
             for process in val:
@@ -88,7 +98,7 @@ def join_processes(*processes) -> None:
     Param: processes either a multiprocess.Process or a List[multiprocess.Process]
     """
     for val in processes:
-        if type(val) == mp.Process:
+        if type(val) != list:
             val.join()
         else:
             for process in val:
@@ -124,13 +134,92 @@ def send_results_to_server(local_directory, key_filepath, log_queue) -> None:
     log_queue.put(f"finished  {__name__}.{send_results_to_server.__name__}")
     log_queue.put(SpecialQueueValues.FINISH)
 
-def run_app():
-    frame_rate, output_directory, key_filepath = open_config()
-    num_video_compute_processes = 6
+# def run_app():
+#     frame_rate, output_directory, key_filepath = open_config()
+#     num_video_compute_processes = 6
     
-    video_data_queue = mp.Queue(maxsize=20)
-    video_metrics_queue = mp.Queue()
-    log_queue = mp.Queue()
+#     video_data_queue = mp.Queue(maxsize=20)
+#     video_metrics_queue = mp.Queue()
+#     log_queue = mp.Queue()
+#     event_check_zoom_meeting_open = mp.Event()
+
+#     video_csv_filename = output_directory + "/video.csv"
+#     network_csv_filename = output_directory + "/network.csv"
+#     log_filename = output_directory + "/log.txt"
+
+#     num_process_before_log_finished = 3 if key_filepath != NO_KEYFILE_PATH else 2 # for graphing and then send results to server 
+
+#     log_process = mp.Process(
+#         target=log_information, 
+#         args=(log_queue, log_filename, num_process_before_log_finished,))
+#     zoom_check_process = mp.Process(
+#         target=video.check_zoom_window_up, 
+#         args=(log_queue, event_check_zoom_meeting_open,))
+    
+#     network_process = mp.Process(
+#         target=network.pipeline_run, 
+#         args=(network_csv_filename, log_queue, event_check_zoom_meeting_open,))
+    
+#     video_capture_process = mp.Process(
+#         target=video.capture_images, 
+#         args=(frame_rate, video_data_queue, log_queue, event_check_zoom_meeting_open,))
+#     video_compute_processes = [
+#         mp.Process(
+#             target=video.compute_metrics, 
+#             args=(video_data_queue, video_metrics_queue, log_queue, event_check_zoom_meeting_open,)) 
+#         for i in range(num_video_compute_processes)]
+#     # done processing when compute_process is done
+#     video_write_process = mp.Process(
+#         target=video.write_metrics, 
+#         args=(video_metrics_queue, video_csv_filename, log_queue, event_check_zoom_meeting_open,))
+
+#     start_processes(
+#         log_process,
+#         zoom_check_process,
+#         network_process,
+#         video_capture_process,
+#         video_compute_processes,
+#         video_write_process,
+#     )
+
+#     pids = get_pids(
+#         zoom_check_process,
+#         network_process,
+#         video_capture_process,
+#         video_compute_processes,
+#         video_write_process,
+#     )
+#     pids += [os.getpid()]
+#     pids = [str(pid) for pid in pids]
+
+#     pid_csv = output_directory + "/pid.txt"
+#     with open(pid_csv, "w") as file:
+#         file.write(",".join(pids))
+
+#     join_processes(
+#         zoom_check_process,
+#         network_process,
+#         video_capture_process,
+#         video_compute_processes,
+#         video_write_process,
+#         # monitor_process_usage_process,
+#     )
+
+#     network.graph_metrics(graph_dir=output_directory, csv_filename=network_csv_filename, log_queue=log_queue)
+#     video.graph_metrics(graph_dir=output_directory, csv_filename=video_csv_filename, log_queue=log_queue)
+
+#     # want to end process after finished graphing
+#     if key_filepath != NO_KEYFILE_PATH:
+#         send_results_to_server(output_directory, key_filepath, log_queue)
+
+#     log_process.join()
+
+def run_app2():
+    ctx = mp.get_context("spawn")
+
+    frame_rate, output_directory, key_filepath, send_existing_output = open_config()
+    
+    log_queue = mp.JoinableQueue(maxsize=30)
     event_check_zoom_meeting_open = mp.Event()
 
     video_csv_filename = output_directory + "/video.csv"
@@ -139,61 +228,52 @@ def run_app():
 
     num_process_before_log_finished = 3 if key_filepath != NO_KEYFILE_PATH else 2 # for graphing and then send results to server 
 
-    log_process = mp.Process(
+    log_process = ctx.Process(
         target=log_information, 
         args=(log_queue, log_filename, num_process_before_log_finished,))
-    zoom_check_process = mp.Process(
-        target=video.check_zoom_window_up, 
-        args=(log_queue, event_check_zoom_meeting_open,))
     
-    network_process = mp.Process(
-        target=network.pipeline_run, 
-        args=(network_csv_filename, log_queue, event_check_zoom_meeting_open,))
-    
-    video_capture_process = mp.Process(
-        target=video.capture_images, 
-        args=(frame_rate, video_data_queue, log_queue, event_check_zoom_meeting_open,))
-    video_compute_processes = [
-        mp.Process(
-            target=video.compute_metrics, 
-            args=(video_data_queue, video_metrics_queue, log_queue, event_check_zoom_meeting_open,)) 
-        for i in range(num_video_compute_processes)]
-    # done processing when compute_process is done
-    video_write_process = mp.Process(
-        target=video.write_metrics, 
-        args=(video_metrics_queue, video_csv_filename, log_queue, event_check_zoom_meeting_open,))
+    if not send_existing_output:
+        zoom_check_process = ctx.Process(
+            target=video.check_zoom_window_up, 
+            args=(log_queue, event_check_zoom_meeting_open,))
+        
+        network_process = ctx.Process(
+            target=network.pipeline_run, 
+            args=(network_csv_filename, log_queue, event_check_zoom_meeting_open,))
+        
+        video_process = ctx.Process(
+            target=video2.pipeline_run, 
+            args=(video_csv_filename, frame_rate, log_queue, event_check_zoom_meeting_open,))
 
-    start_processes(
-        log_process,
-        zoom_check_process,
-        network_process,
-        video_capture_process,
-        video_compute_processes,
-        video_write_process,
-    )
+        # done processing when compute_process is done
 
-    pids = get_pids(
-        zoom_check_process,
-        network_process,
-        video_capture_process,
-        video_compute_processes,
-        video_write_process,
-    )
-    pids += [os.getpid()]
-    pids = [str(pid) for pid in pids]
+        start_processes(
+            log_process,
+            zoom_check_process,
+            network_process,
+            video_process,
+        )
 
-    pid_csv = output_directory + "/pid.txt"
-    with open(pid_csv, "w") as file:
-        file.write(",".join(pids))
+        pids = get_pids(
+            zoom_check_process,
+            network_process,
+            video_process,
+        )
+        pids += [os.getpid()]
+        pids = [str(pid) for pid in pids]
 
-    join_processes(
-        zoom_check_process,
-        network_process,
-        video_capture_process,
-        video_compute_processes,
-        video_write_process,
-        # monitor_process_usage_process,
-    )
+        pid_csv = output_directory + "/pid.txt"
+        with open(pid_csv, "w") as file:
+            file.write(",".join(pids))
+
+        join_processes(
+            zoom_check_process,
+            network_process,
+            video_process,
+            # monitor_process_usage_process,
+        )
+    else:
+        log_process.start()
 
     network.graph_metrics(graph_dir=output_directory, csv_filename=network_csv_filename, log_queue=log_queue)
     video.graph_metrics(graph_dir=output_directory, csv_filename=video_csv_filename, log_queue=log_queue)
@@ -205,4 +285,4 @@ def run_app():
     log_process.join()
 
 if __name__ == "__main__":
-    run_app()
+    run_app2()

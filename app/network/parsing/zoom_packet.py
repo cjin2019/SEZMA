@@ -1,6 +1,6 @@
 from dataclasses import dataclass
-from scapy.all import Packet, conf, get_if_addr
-from scapy.layers.inet import Ether, IP, UDP
+from scapy.all import *
+from scapy.layers.inet import *
 
 from app.network.parsing.exceptions import PacketException
 from app.network.parsing.packet_time import PacketTime

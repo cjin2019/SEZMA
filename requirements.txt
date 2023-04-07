@@ -1,4 +1,4 @@
-scapy==2.4.5
+scapy
 setuptools==65.6.3
 numpy==1.23.1
 scipy==1.9.3
@@ -9,5 +9,6 @@ libpcap==1.11.0b7
 psutil==5.9.4
 netmiko==4.1.2
 paramiko
+pgrep
 # brisque==0.0.15
 
