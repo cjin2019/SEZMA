@@ -73,7 +73,6 @@ def start_processes(*processes) -> None:
     multiprocess.get_context("spawn").Process
     """
     for val in processes:
-        print(type(val))
         if type(val) != list:
             val.start()
         else:
