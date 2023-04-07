@@ -65,8 +65,9 @@ listening on eth0, link-type EN10MB (Ethernet), capture size 65535 bytes
 Open up Terminal App. All the following commands will be run in Terminal.
 1. Once you unzip the file, `cd /path/to/distribute_app`.
 2. In`config.ini` file,
-    1. Update OutputDirectory to filepath of directory you want to store output
-    2. If you have the key pem file to upload results to the server, update KeyFilePath to filepath storing pem file for the server. If not, leave the file as "NOT GIVEN"
+    1. REQUIRED: "OutputDirectoryt": filepath of directory to store data
+    2. REQUIRED: "FrameRate": the screen capture at an initial frame capture rate (frames per second). The default frame capture rate may be too high for your laptop, in which case the frame rate will be reduced.  
+    3. REQUIRED "KeyFilePath": filepath of the key file of centralized server to send results. Otherwise, set to NOT GIVEN
 3. `sudo videonetworkapp.app/Contents/MacOS/videonetworkapp `. If a pop-up starting with " "videonetworkapp" can't be opened because Apple cannot check it for malicious software" opens, click OK. 
     1. You will need to give permissions to run the app. Open Privacy & Security in Settings and scroll down until you see " "videonetworkapp" was blocked from use because it is not from an identified developer". Click Open Anyway. 
     2. If the pop-up of " "videonetworkapp" can't be opened because Apple cannot check it for malicious software" opens again, click Open. The app will pop up, run, and then close. 
@@ -83,8 +84,9 @@ Open up Terminal App. All the following commands will be run in Terminal.
 Open up Terminal App. All the following commands will be run in Terminal.
 1. Once you unzip the file, `cd /path/to/distribute_app`.
 2. In`config.ini` file,
-    1. Update OutputDirectory to filepath of directory you want to store output
-    2. If you have the key pem file to upload results to the server, update KeyFilePath to filepath storing pem file for the server. If not, leave the file as "NOT GIVEN"
+    1. REQUIRED: "OutputDirectoryt": filepath of directory to store data
+    2. REQUIRED: "FrameRate": the screen capture at an initial frame capture rate (frames per second). The default frame capture rate may be too high for your laptop, in which case the frame rate will be reduced.  
+    3. REQUIRED "KeyFilePath": filepath of the key file of centralized server to send results. Otherwise, set to NOT GIVEN
 3. `sudo ./videonetworkapp.bin`. If a pop-up starting with " "videonetworkapp.bin" can't be opened because Apple cannot check it for malicious software" opens, click OK. 
     1. You will need to give permissions to run the app. Open Privacy & Security in Settings and scroll down until you see " "videonetworkapp.bin" was blocked from use because it is not from an identified developer". Click Open Anyway. 
     2. If the pop-up of " "videonetwork.bin" can't be opened because Apple cannot check it for malicious software" opens again, click Open. The app will pop up, run, and then close. 
@@ -98,18 +100,20 @@ Open up Terminal App. All the following commands will be run in Terminal.
 
 #### Install
 
-1. Requires >= 3.8 and <= 3.10
+1. Requires Python >= 3.8 and <= 3.10
 2. Run `./install.sh`
 
 #### Run
 
-1. Edit `config.ini` file to save to the data to appropriate location, file path of the key file of centralized server to send results, and run the screen capture at an initial frame capture rate. The default frame capture rate may be too high for your laptop, in which case the frame rate will be
-reduced.  
+1. Edit `config.ini` file to save 
+    1. REQUIRED: "OutputDirectoryt": filepath of directory to store data
+    2. REQUIRED: "FrameRate": the screen capture at an initial frame capture rate (frames per second). The default frame capture rate may be too high for your laptop, in which case the frame rate will be reduced.  
+    3. REQUIRED "KeyFilePath": filepath of the key file of centralized server to send results. Otherwise, set to NOT GIVEN
 2. `sudo ./run.sh`
 
 #### Monitor Run
 
-1. `sudo ./monitor.sh`
+1. If you want to check usage, you can use `sudo ./monitor.sh`
 
 ### Binarize Python Codebase with Nuitka
 

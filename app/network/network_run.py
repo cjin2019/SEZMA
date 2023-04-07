@@ -159,14 +159,17 @@ def group_by_frames(csv_filename: str, log_queue) -> Dict[bytes, List["NetworkMe
                 continue
             
             # account for 0 microsecond case
-            network_metrics = NetworkMetrics(
-                frame_sequence_number=bytes(row[0][2:], 'utf-8'),
-                packet_time=datetime.strptime(row[1], get_timeformat(row[1])),
-                packet_size=int(row[2]),
-                expected_number_of_packets=int(row[3]),
-                is_fec=row[4] == "True"
-            )
-            output[network_metrics.frame_sequence_number].append(network_metrics)
+            try: 
+                network_metrics = NetworkMetrics(
+                    frame_sequence_number=bytes(row[0][2:], 'utf-8'),
+                    packet_time=datetime.strptime(row[1], get_timeformat(row[1])),
+                    packet_size=int(row[2]),
+                    expected_number_of_packets=int(row[3]),
+                    is_fec=row[4] == "True"
+                )
+                output[network_metrics.frame_sequence_number].append(network_metrics)
+            except ValueError:
+                continue
     
     log_queue.put(f"finsihed {__name__}.{group_by_frames.__name__}")
     return output
