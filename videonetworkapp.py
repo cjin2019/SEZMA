@@ -31,7 +31,9 @@ def open_config() -> Tuple[float,str, str, bool]:
 
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
-
+    
+    if output_directory[-1] == "/":
+        output_directory = output_directory[:-1]
     return (frame_rate, output_directory, key_filepath, send_existing_output)
 
 def log_information(data_queue, filename: str, num_processes_finished: int = 1, flush_every_nth_line: int = 1):
