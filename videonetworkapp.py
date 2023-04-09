@@ -2,6 +2,8 @@ import configparser
 import multiprocessing as mp
 import os
 import queue
+import requests
+
 from os.path import dirname, join
 import sys
 from paramiko import SSHClient, AutoAddPolicy
@@ -15,7 +17,7 @@ from app.common.constants import SpecialQueueValues, TIME_FORMAT
 
 NO_KEYFILE_PATH = "NOT GIVEN"
 
-def open_config() -> Tuple[float,str, str, bool]:
+def open_config() -> Tuple[float,str, str]:
     """
     Returns frame rate, output directory for graphs and logs, key_filepath for remote server
     """
@@ -26,15 +28,15 @@ def open_config() -> Tuple[float,str, str, bool]:
     config = config_all["DEFAULT"]
     frame_rate: float = float(config["FrameRate"])
     output_directory: str = config["OutputDirectory"]
-    key_filepath: str = config["KeyFilePath"]
-    send_existing_output: bool = "SendOutputToServer" in config
+    ip_address: str = config["IPAddress"]
+    # send_existing_output: bool = "SendOutputToServer" in config
 
     if not os.path.exists(output_directory):
         os.makedirs(output_directory)
     
     if output_directory[-1] == "/":
         output_directory = output_directory[:-1]
-    return (frame_rate, output_directory, key_filepath, send_existing_output)
+    return (frame_rate, output_directory, ip_address)
 
 def log_information(data_queue, filename: str, num_processes_finished: int = 1, flush_every_nth_line: int = 1):
     """
@@ -135,6 +137,17 @@ def send_results_to_server(local_directory, key_filepath, log_queue) -> None:
     log_queue.put(f"finished  {__name__}.{send_results_to_server.__name__}")
     log_queue.put(SpecialQueueValues.FINISH)
 
+def send_files_to_web_server(website_address, local_directory, log_queue) -> None:
+    log_queue.put(f"started  {__name__}.{send_files_to_web_server.__name__}")
+    for filename in os.listdir(local_directory):
+        if filename[-3:] == "png":
+            url = website_address + "/upload"
+            files = {'files': open(local_directory + "/" + filename, 'rb')}
+            remote_directory = local_directory[local_directory.rindex("/")+1:]
+            requests.post(url, files=files, params={"directory": remote_directory})
+    log_queue.put(f"finished  {__name__}.{send_files_to_web_server.__name__}")
+    log_queue.put(SpecialQueueValues.FINISH)
+
 # def run_app():
 #     frame_rate, output_directory, key_filepath = open_config()
 #     num_video_compute_processes = 6
@@ -218,7 +231,7 @@ def send_results_to_server(local_directory, key_filepath, log_queue) -> None:
 def run_app2():
     ctx = mp.get_context("spawn")
 
-    frame_rate, output_directory, key_filepath, send_existing_output = open_config()
+    frame_rate, output_directory, ip_address = open_config()
     
     log_queue = mp.JoinableQueue(maxsize=30)
     event_check_zoom_meeting_open = mp.Event()
@@ -227,61 +240,58 @@ def run_app2():
     network_csv_filename = output_directory + "/network.csv"
     log_filename = output_directory + "/log.txt"
 
-    num_process_before_log_finished = 3 if key_filepath != NO_KEYFILE_PATH else 2 # for graphing and then send results to server 
+    num_process_before_log_finished = 3 # for graphing and then send results to server 
 
     log_process = ctx.Process(
         target=log_information, 
         args=(log_queue, log_filename, num_process_before_log_finished,))
     
-    if not send_existing_output:
-        zoom_check_process = ctx.Process(
-            target=video.check_zoom_window_up, 
-            args=(log_queue, event_check_zoom_meeting_open,))
-        
-        network_process = ctx.Process(
-            target=network.pipeline_run, 
-            args=(network_csv_filename, log_queue, event_check_zoom_meeting_open,))
-        
-        video_process = ctx.Process(
-            target=video2.pipeline_run, 
-            args=(video_csv_filename, frame_rate, log_queue, event_check_zoom_meeting_open,))
+    zoom_check_process = ctx.Process(
+        target=video.check_zoom_window_up, 
+        args=(log_queue, event_check_zoom_meeting_open,))
+    
+    network_process = ctx.Process(
+        target=network.pipeline_run, 
+        args=(network_csv_filename, log_queue, event_check_zoom_meeting_open,))
+    
+    video_process = ctx.Process(
+        target=video2.pipeline_run, 
+        args=(video_csv_filename, frame_rate, log_queue, event_check_zoom_meeting_open,))
 
         # done processing when compute_process is done
 
-        start_processes(
-            log_process,
-            zoom_check_process,
-            network_process,
-            video_process,
-        )
+    start_processes(
+        log_process,
+        zoom_check_process,
+        network_process,
+        video_process,
+    )
 
-        pids = get_pids(
-            zoom_check_process,
-            network_process,
-            video_process,
-        )
-        pids += [os.getpid()]
-        pids = [str(pid) for pid in pids]
+    pids = get_pids(
+        zoom_check_process,
+        network_process,
+        video_process,
+    )
+    pids += [os.getpid()]
+    pids = [str(pid) for pid in pids]
 
-        pid_csv = output_directory + "/pid.txt"
-        with open(pid_csv, "w") as file:
-            file.write(",".join(pids))
+    pid_csv = output_directory + "/pid.txt"
+    with open(pid_csv, "w") as file:
+        file.write(",".join(pids))
 
-        join_processes(
-            zoom_check_process,
-            network_process,
-            video_process,
-            # monitor_process_usage_process,
-        )
-    else:
-        log_process.start()
+    join_processes(
+        zoom_check_process,
+        network_process,
+        video_process,
+        # monitor_process_usage_process,
+    )
 
     network.graph_metrics(graph_dir=output_directory, csv_filename=network_csv_filename, log_queue=log_queue)
     video.graph_metrics(graph_dir=output_directory, csv_filename=video_csv_filename, log_queue=log_queue)
 
     # want to end process after finished graphing
-    if key_filepath != NO_KEYFILE_PATH:
-        send_results_to_server(output_directory, key_filepath, log_queue)
+    
+    send_files_to_web_server(ip_address, output_directory, log_queue)
 
     log_process.join()
 

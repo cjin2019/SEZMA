@@ -67,7 +67,7 @@ Open up Terminal App. All the following commands will be run in Terminal.
 2. In`config.ini` file,
     1. REQUIRED: "OutputDirectoryt": filepath of directory to store data
     2. REQUIRED: "FrameRate": the screen capture at an initial frame capture rate (frames per second). The default frame capture rate may be too high for your laptop, in which case the frame rate will be reduced.  
-    3. REQUIRED "KeyFilePath": filepath of the key file of centralized server to send results. Otherwise, set to NOT GIVEN
+    3. NO CHANGE "IPAddress": IP address of the centralized server. 
 3. `sudo videonetworkapp.app/Contents/MacOS/videonetworkapp `. If a pop-up starting with " "videonetworkapp" can't be opened because Apple cannot check it for malicious software" opens, click OK. 
     1. You will need to give permissions to run the app. Open Privacy & Security in Settings and scroll down until you see " "videonetworkapp" was blocked from use because it is not from an identified developer". Click Open Anyway. 
     2. If the pop-up of " "videonetworkapp" can't be opened because Apple cannot check it for malicious software" opens again, click Open. The app will pop up, run, and then close. 
@@ -86,7 +86,7 @@ Open up Terminal App. All the following commands will be run in Terminal.
 2. In`config.ini` file,
     1. REQUIRED: "OutputDirectoryt": filepath of directory to store data
     2. REQUIRED: "FrameRate": the screen capture at an initial frame capture rate (frames per second). The default frame capture rate may be too high for your laptop, in which case the frame rate will be reduced.  
-    3. REQUIRED "KeyFilePath": filepath of the key file of centralized server to send results. Otherwise, set to NOT GIVEN
+    3. NO CHANGE "IPAddress": IP address of the centralized server. 
 3. `sudo ./videonetworkapp.bin`. If a pop-up starting with " "videonetworkapp.bin" can't be opened because Apple cannot check it for malicious software" opens, click OK. 
     1. You will need to give permissions to run the app. Open Privacy & Security in Settings and scroll down until you see " "videonetworkapp.bin" was blocked from use because it is not from an identified developer". Click Open Anyway. 
     2. If the pop-up of " "videonetwork.bin" can't be opened because Apple cannot check it for malicious software" opens again, click Open. The app will pop up, run, and then close. 
@@ -109,7 +109,7 @@ Open up Terminal App. All the following commands will be run in Terminal.
 1. Edit `config.ini` file to save 
     1. REQUIRED: "OutputDirectory": filepath of directory to store data
     2. REQUIRED: "FrameRate": the screen capture at an initial frame capture rate (frames per second). The default frame capture rate may be too high for your laptop, in which case the frame rate will be reduced.  
-    3. REQUIRED "KeyFilePath": filepath of the key file of centralized server to send results. Otherwise, set to NOT GIVEN
+    3. NO CHANGE "IPAddress": IP address of the centralized server. 
 2. `cd /path/to/videonetworkapp`
 3. `sudo ./run.sh`
 
