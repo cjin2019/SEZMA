@@ -107,36 +107,6 @@ def join_processes(*processes) -> None:
             for process in val:
                 process.join()
 
-def send_results_to_server(local_directory, key_filepath, log_queue) -> None:
-    """
-    Param: local_directory directory where the graphs are stored
-    Param: key_filepath is where the pem file to access the server is stored
-    Param: log_queue is mp.Queue that contains a string with log information
-    """
-    log_queue.put(f"started  {__name__}.{send_results_to_server.__name__}")
-    remote_directory = "/home/ubuntu/" + local_directory[local_directory.rindex("/")+1:]
-
-    client = SSHClient()
-    client.load_system_host_keys()
-    client.set_missing_host_key_policy(AutoAddPolicy())
-
-    client.connect(hostname='128.52.141.6', username='ubuntu', key_filename=key_filepath)
-
-    sftp = client.open_sftp()
-    try:
-        sftp.chdir(remote_directory)  # Test if remote_path exists
-    except IOError:
-        sftp.mkdir(remote_directory)  # Create remote_path
-        sftp.chdir(remote_directory)
-
-    for filename in os.listdir(local_directory):
-        if filename[-3:] == "png":
-            sftp.put(local_directory + "/" + filename, remote_directory + "/" + filename)
-
-    sftp.close()
-    log_queue.put(f"finished  {__name__}.{send_results_to_server.__name__}")
-    log_queue.put(SpecialQueueValues.FINISH)
-
 def send_files_to_web_server(website_address, local_directory, log_queue) -> None:
     log_queue.put(f"started  {__name__}.{send_files_to_web_server.__name__}")
     for filename in os.listdir(local_directory):
@@ -146,6 +116,18 @@ def send_files_to_web_server(website_address, local_directory, log_queue) -> Non
             remote_directory = local_directory[local_directory.rindex("/")+1:]
             requests.post(url, files=files, params={"directory": remote_directory})
     log_queue.put(f"finished  {__name__}.{send_files_to_web_server.__name__}")
+    log_queue.put(SpecialQueueValues.FINISH)
+
+def delete_all_files(local_directory, log_queue) -> None:
+    log_queue.put(f"started  {__name__}.{delete_all_files.__name__}")
+    for filename in os.listdir(local_directory):
+        # construct full file path
+        file = local_directory + "/" + filename
+        if os.path.isfile(file):
+            print('Deleting file:', file)
+            os.remove(file)
+    os.rmdir(local_directory)
+    log_queue.put(f"finished  {__name__}.{delete_all_files.__name__}")
     log_queue.put(SpecialQueueValues.FINISH)
 
 # def run_app():
@@ -240,7 +222,7 @@ def run_app2():
     network_csv_filename = output_directory + "/network.csv"
     log_filename = output_directory + "/log.txt"
 
-    num_process_before_log_finished = 3 # for graphing and then send results to server 
+    num_process_before_log_finished = 4 # graphing network, graphing video, sending results to server, and deleting on local
 
     log_process = ctx.Process(
         target=log_information, 
@@ -292,6 +274,9 @@ def run_app2():
     # want to end process after finished graphing
     
     send_files_to_web_server(ip_address, output_directory, log_queue)
+
+    # delete all files from directory
+    delete_all_files(local_directory=output_directory, log_queue=log_queue)
 
     log_process.join()
 
