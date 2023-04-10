@@ -221,8 +221,8 @@ def graph_metrics(graph_dir: str, csv_filename: str, log_queue) -> None:
         compared_to_expected = metrics[0].expected_number_of_packets - num_packets
         num_compared_to_expected.append(compared_to_expected)
         
-        if num_compared_to_expected[-1] >= 10:
-            print(frame)
+        # if num_compared_to_expected[-1] >= 10:
+        #     print(frame)
 
     # start plotting
 
