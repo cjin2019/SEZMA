@@ -63,7 +63,7 @@ listening on eth0, link-type EN10MB (Ethernet), capture size 65535 bytes
 
 ##### Set Up
 Open up Terminal App. All the following commands will be run in Terminal.
-1. Once you unzip the file, `cd /path/to/mac_m1_macos_13`.
+1. Once you unzip the file, `cd /path/to/mac_m1_macos_13` or `cd /path/to/mac_x86_64_macos_12`s
 2. In`config.ini` file,
     1. REQUIRED: "OutputDirectoryt": absolute filepath of directory to store data
     2. REQUIRED: "FrameRate": the screen capture at an initial frame capture rate (frames per second). The default frame capture rate may be too high for your laptop, in which case the frame rate will be reduced.  
@@ -121,7 +121,7 @@ Open up Terminal App. All the following commands will be run in Terminal.
 
 1. Activate your virtual environment. `source venv/bin/activate`.
 2. If nuitka not installed, run `python3 -m pip install -U nuitka`
-3. Mac M1 command: `python3 -m nuitka --onefile --include-plugin-directory=app --include-data-files=/Users/carolinejin/Documents/meng_project/videonetworkapp/app/video/metrics/niqe_image_params.mat=app/video/metrics/niqe_image_params.mat --macos-create-app-bundle videonetworkapp.py` --> python used homebrew python3.9 (did not work with installed python in M1 due to recursion import error)
+3. Mac M1 command: `python3 -m nuitka --onefile --include-plugin-directory=app --include-data-files=/path/to/videonetworkapp/app/video/metrics/niqe_image_params.mat=app/video/metrics/niqe_image_params.mat --macos-create-app-bundle videonetworkapp.py` --> python used homebrew python3.9 (did not work with installed python in M1 due to recursion import error)
 4. Macbook Intel Laptop: `python3 -m nuitka --follow-imports --include-plugin-directory=app videonetworkapp.py`
 
 <!-- #### Python 3.9. -->
