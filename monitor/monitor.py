@@ -20,7 +20,7 @@ def open_config() -> Tuple[int,str]:
     config_all.read('config.ini')
     
     config = config_all["DEFAULT"]
-    frame_rate: int = int(config["FrameRate"])
+    frame_rate: int = float(config["FrameRate"])
     output_directory: str = config["OutputDirectory"]
 
     if not os.path.exists(output_directory):
@@ -28,7 +28,7 @@ def open_config() -> Tuple[int,str]:
 
     return (frame_rate, output_directory)
 
-def monitor_process_usage(process_ids: List[int], filename: str) -> None:
+def monitor_process_usage(app_to_process_ids: Dict[str, List[int]], filename: str) -> None:
     """
     Param: process_ids contains list of ids to monitor for
     Param: filename to store the monitor process metrics in
@@ -36,12 +36,13 @@ def monitor_process_usage(process_ids: List[int], filename: str) -> None:
     Param: zoom_meeting_on_check determines whether Zoom Meeting is still in progress on the user's laptop
     """
 
-    processes: List[psutil.Process] = []
-    for pid in process_ids:
-        try:
-            processes.append(psutil.Process(pid=pid))
-        except psutil.NoSuchProcess as e:
-            continue
+    processes: Dict[str, List[psutil.Process]] = {app: [] for app in app_to_process_ids}
+    for app in app_to_process_ids:
+        for pid in app_to_process_ids[app]:
+            try:
+                processes[app].append(psutil.Process(pid=pid))
+            except psutil.NoSuchProcess as e:
+                continue
 
     with open(filename, mode="w") as file:
         csv_writer = csv.writer(file)
@@ -58,11 +59,13 @@ def monitor_process_usage(process_ids: List[int], filename: str) -> None:
                         memory_percent_usage += proc.memory_percent()
                         #cpu_percent_usage += sum([proc.cpu_percent() / mp.cpu_count() for i in range(3)])/3
                         #print("cpu percentage", proc.cpu_percent())
-                        cpu_value: str = subprocess.run(['top', '-pid', str(proc.pid), '-l', '3', '-stats', 'cpu'], check=True, stdout=subprocess.PIPE).stdout.decode('UTF-8').split("\n")[-2]
+                        cpu_mem_value: str = subprocess.run(['top', '-pid', str(proc.pid), '-l', '3', '-stats', 'cpu,mem'], check=True, stdout=subprocess.PIPE).stdout.decode('UTF-8').split("\n")[-2]
                         # print(proc.pid, cpu_value)
-                        cpu_percent_usage += float(cpu_value) / mp.cpu_count()
-                        # print(subprocess.check_output(["top", "-pid", str(pid), "-l", str(3), "-stats" , "power", "|", "tail", "-1"]))
-                csv_writer.writerow([datetime.now().strftime(TIME_FORMAT), memory_percent_usage, cpu_percent_usage])
+                        print(cpu_mem_value)
+                        print(mp.cpu_count())
+                #         cpu_percent_usage += float(cpu_value) / mp.cpu_count()
+                #         # print(subprocess.check_output(["top", "-pid", str(pid), "-l", str(3), "-stats" , "power", "|", "tail", "-1"]))
+                # csv_writer.writerow([datetime.now().strftime(TIME_FORMAT), memory_percent_usage, cpu_percent_usage])
             except Exception as e:
                 break
 
@@ -75,7 +78,7 @@ def graph_metrics(graph_dir: str, csv_filename: str) -> None:
     process_data: Dict[str, List[float]] = {}
     process_metrics: List = []
     with open(csv_filename) as csvfile:
-        csvreader = csv.reader(csvfile)
+        csvreader = csv.reader(csvfile, delimiter=' ')
         for i, row in enumerate(csvreader):
             if i == 0:
                 process_metrics = row[1:]
@@ -109,9 +112,45 @@ def graph_metrics(graph_dir: str, csv_filename: str) -> None:
     )
     fig.savefig(image_filename)
 
+def parse_mem_usage(mem_str) -> float:
+    """
+    returns in MB
+    """ 
+    if mem_str[-1] == "+" or mem_str[-1] == "-":
+        mem_str = mem_str[:-1]
+    if mem_str[-1] == "K":
+        return float(mem_str[:-1])/1000
+    else: #in M
+        return float(mem_str[:-1])
+    
+def parse_monitor_files(filename: str, num_processes: int = 1) -> None:
+
+    cpu_percentages = []
+    mem_usages = []
+    with open(filename) as csvfile:
+        csvreader = csv.reader(csvfile, delimiter=' ')
+        cpu_percentage = 0
+        mem_usage = 0
+        for i, row in enumerate(csvreader):
+            while '' in row:
+                row.remove('')
+            cpu_percentage += float(row[-2])
+            mem_usage += parse_mem_usage(row[-1])
+            if i%num_processes == num_processes-1:
+                cpu_percentages.append(cpu_percentage)
+                mem_usages.append(mem_usage)
+                cpu_percentage = 0
+                mem_usage = 0
+    print(f"Filename: {filename}")
+    print(f"Num cores: {mp.cpu_count()}")
+    print(f"CPU average: {sum(cpu_percentages) / len(cpu_percentages)}")
+    print(f"Memory average: {sum(mem_usages)/ len(mem_usages)}")
+        
 if __name__ == "__main__":
+    parse_monitor_files("videonetworkapp.csv", 6)
+    parse_monitor_files("zoom.csv")
     ### wait until file exists with numbers
-    _, output_directory = open_config()
+    # _, output_directory = open_config()
 
     # pid_csv = output_directory + "/pid.txt"
     # pids = []
@@ -119,8 +158,9 @@ if __name__ == "__main__":
     #     pids = file.readline().split(",")
     # pids = [int(pid) for pid in pids]
     
-    pids = pgrep.pgrep("videonetwork") # for running the binary
+    # pids = {"videonetwork": pgrep.pgrep("videonetwork"), "zoom.us": pgrep.pgrep("videonetwork")}# for running the binary
+    # print(pids)
     
-    process_usage_file = output_directory + "/process_usage.csv"
-    monitor_process_usage(pids, process_usage_file)
-    graph_metrics(output_directory, process_usage_file)
+    # process_usage_file = output_directory + "/process_usage.csv"
+    # monitor_process_usage(pids, process_usage_file)
+    # graph_metrics(output_directory, process_usage_file)

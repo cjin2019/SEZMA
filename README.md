@@ -59,11 +59,11 @@ listening on eth0, link-type EN10MB (Ethernet), capture size 65535 bytes
 
 ### How to Run the App From Binary
 
-#### Mac M1 App File
+#### Mac M1/Intel App File
 
 ##### Set Up
 Open up Terminal App. All the following commands will be run in Terminal.
-1. Once you unzip the file, `cd /path/to/distribute_app`.
+1. Once you unzip the file, `cd /path/to/mac_m1_macos_13`.
 2. In`config.ini` file,
     1. REQUIRED: "OutputDirectoryt": filepath of directory to store data
     2. REQUIRED: "FrameRate": the screen capture at an initial frame capture rate (frames per second). The default frame capture rate may be too high for your laptop, in which case the frame rate will be reduced.  
@@ -78,7 +78,7 @@ Open up Terminal App. All the following commands will be run in Terminal.
 1. If you want to update your `config.ini`, update as described in Set Up 2.1 and/or 2.2
 2. `cp config.ini videonetworkapp.app/Contents/MacOS/config.ini`
 
-#### Mac Intel App File
+<!-- #### Mac Intel App File
 
 ##### Set Up
 Open up Terminal App. All the following commands will be run in Terminal.
@@ -93,7 +93,7 @@ Open up Terminal App. All the following commands will be run in Terminal.
 4. Run `sudo ./videonetworkapp.bin` again. It should work now. 
 
 ##### Update
-1. If you want to update your `config.ini`, update as described in Set Up 2.1 and/or 2.2
+1. If you want to update your `config.ini`, update as described in Set Up 2.1 and/or 2.2 -->
 
 
 ### How to Run App from Codebase
@@ -160,6 +160,7 @@ reduced.  -->
     2. `brew install libpcap`
     3. `scapy`: to open scapy in terminal
     4. Once in the scapy terminal, run `conf.use_pcap = True`
+2. When trying to binarize the package, I ran into `cv2` recursion import error. This is due to python3 Apple version. Try using `homebrew`'s python version instead. 
 <!-- 1. What if you run into `ERROR: fontconfig not found using pkg-config` when running `./configure --enable-libfreetype --enable-libfontconfig`? 
 Make sure `fontconfig` and `pkg-config` is installed. You can install through `brew install fontconfig pkg-config` -->
 
