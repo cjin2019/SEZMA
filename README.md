@@ -65,7 +65,7 @@ listening on eth0, link-type EN10MB (Ethernet), capture size 65535 bytes
 Open up Terminal App. All the following commands will be run in Terminal.
 1. Once you unzip the file, `cd /path/to/distribute_app`.
 2. In`config.ini` file,
-    1. REQUIRED: "OutputDirectoryt": filepath of directory to store data
+    1. REQUIRED: "OutputDirectoryt": absolute filepath of directory to store data
     2. REQUIRED: "FrameRate": the screen capture at an initial frame capture rate (frames per second). The default frame capture rate may be too high for your laptop, in which case the frame rate will be reduced.  
     3. NO CHANGE "IPAddress": IP address of the centralized server. 
 3. `sudo videonetworkapp.app/Contents/MacOS/videonetworkapp `. If a pop-up starting with " "videonetworkapp" can't be opened because Apple cannot check it for malicious software" opens, click OK. 
@@ -84,7 +84,7 @@ Open up Terminal App. All the following commands will be run in Terminal.
 Open up Terminal App. All the following commands will be run in Terminal.
 1. Once you unzip the file, `cd /path/to/distribute_app`.
 2. In`config.ini` file,
-    1. REQUIRED: "OutputDirectoryt": filepath of directory to store data
+    1. REQUIRED: "OutputDirectoryt": absolute filepath of directory to store data
     2. REQUIRED: "FrameRate": the screen capture at an initial frame capture rate (frames per second). The default frame capture rate may be too high for your laptop, in which case the frame rate will be reduced.  
     3. NO CHANGE "IPAddress": IP address of the centralized server. 
 3. `sudo ./videonetworkapp.bin`. If a pop-up starting with " "videonetworkapp.bin" can't be opened because Apple cannot check it for malicious software" opens, click OK. 
@@ -107,7 +107,7 @@ Open up Terminal App. All the following commands will be run in Terminal.
 #### Run
 Open up Terminal App. All the following commands will be run in Terminal.
 1. Edit `config.ini` file to save 
-    1. REQUIRED: "OutputDirectory": filepath of directory to store data
+    1. REQUIRED: "OutputDirectory": absolute filepath of directory to store data
     2. REQUIRED: "FrameRate": the screen capture at an initial frame capture rate (frames per second). The default frame capture rate may be too high for your laptop, in which case the frame rate will be reduced.  
     3. NO CHANGE "IPAddress": IP address of the centralized server. 
 2. `cd /path/to/videonetworkapp_codebase`
