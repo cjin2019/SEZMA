@@ -101,16 +101,16 @@ Open up Terminal App. All the following commands will be run in Terminal.
 #### Install
 
 1. Requires Python >= 3.8 and <= 3.10
-2. `cd /path/to/videonetworkapp`
+2. Once you unzip file, `cd /path/to/videonetworkapp_codebase`
 3. Run `./install.sh`
 
 #### Run
-
+Open up Terminal App. All the following commands will be run in Terminal.
 1. Edit `config.ini` file to save 
     1. REQUIRED: "OutputDirectory": filepath of directory to store data
     2. REQUIRED: "FrameRate": the screen capture at an initial frame capture rate (frames per second). The default frame capture rate may be too high for your laptop, in which case the frame rate will be reduced.  
     3. NO CHANGE "IPAddress": IP address of the centralized server. 
-2. `cd /path/to/videonetworkapp`
+2. `cd /path/to/videonetworkapp_codebase`
 3. `sudo ./run.sh`
 
 #### Monitor Run
