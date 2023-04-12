@@ -198,6 +198,8 @@ def graph_metrics(graph_dir: str, csv_filename: str, log_queue) -> None:
     times: List[datetime] = []
     image_scores: Dict[MetricType, List[float]] = {}
     header = []
+
+    stall_values: List[int] = []
     
     log_queue.put(f"started {__name__}.{graph_metrics.__name__}")
     with open(csv_filename) as csvfile:
@@ -210,13 +212,23 @@ def graph_metrics(graph_dir: str, csv_filename: str, log_queue) -> None:
             times.append(datetime.strptime(row[0], TIME_FORMAT))
             for idx in range(1, len(row)):
                 image_scores[MetricType(header[idx])].append(float(row[idx]))
-
+                
+            # code for checking if stalling exists
+            if len(image_scores[MetricType.LAPLACIAN]) == 1:
+                stall_values.append(0)
+            else:
+                if image_scores[MetricType.LAPLACIAN][-2] == image_scores[MetricType.LAPLACIAN][-1]:
+                    stall_values.append(1)
+                else:
+                    stall_values.append(0)
+            
             # fix the issue where laplacian scores are too high (ie. in 1000s)
             if image_scores[MetricType.LAPLACIAN][-1] > 600:
                 # remove the last entry
                 for metric_type in image_scores:
                     image_scores[metric_type].pop()
                 times.pop()
+                stall_values.pop()
                 break
     # start plotting
     SMALL_SIZE = 250
@@ -241,6 +253,21 @@ def graph_metrics(graph_dir: str, csv_filename: str, log_queue) -> None:
         graph_dir + "/" + "frame_timeline.png"
     )
     fig.savefig(image_filename)
+
+    fig, ax = plt.subplots(1, 1, figsize=(200, 100))
+    fig.tight_layout(pad=5.0)
+
+    ax.grid(True, color='r')
+    ax.plot_date(times, stall_values, ms=30)
+    ax.set_title("Stalling In Video")
+    ax.set_xlabel("Unix Time")
+    ax.set_ylabel(f"Stall or Not")
+
+    image_filename = (
+        graph_dir + "/" + "stall_timeline.png"
+    )
+    fig.savefig(image_filename)
+
     log_queue.put(f"finished {__name__}.{graph_metrics.__name__}")
     log_queue.put(SpecialQueueValues.FINISH)
 
@@ -249,6 +276,8 @@ def graph_metrics_no_logging(graph_dir: str, csv_filename: str) -> None:
     times: List[datetime] = []
     image_scores: Dict[MetricType, List[float]] = {}
     header = []
+
+    stall_values: List[int] = []
     
     with open(csv_filename) as csvfile:
         csvreader = csv.reader(csvfile)
@@ -260,16 +289,26 @@ def graph_metrics_no_logging(graph_dir: str, csv_filename: str) -> None:
             times.append(datetime.strptime(row[0], TIME_FORMAT))
             for idx in range(1, len(row)):
                 image_scores[MetricType(header[idx])].append(float(row[idx]))
-
+                
+            # code for checking if stalling exists
+            if len(image_scores[MetricType.LAPLACIAN]) == 1:
+                stall_values.append(0)
+            else:
+                if image_scores[MetricType.LAPLACIAN][-2] == image_scores[MetricType.LAPLACIAN][-1]:
+                    stall_values.append(1)
+                else:
+                    stall_values.append(0)
+            
             # fix the issue where laplacian scores are too high (ie. in 1000s)
             if image_scores[MetricType.LAPLACIAN][-1] > 600:
                 # remove the last entry
                 for metric_type in image_scores:
                     image_scores[metric_type].pop()
                 times.pop()
+                stall_values.pop()
                 break
     # start plotting
-    SMALL_SIZE = 200
+    SMALL_SIZE = 250
 
     plt.rc("font", size=SMALL_SIZE)  # controls default text sizes
     plt.rc("axes", titlesize=SMALL_SIZE)  # fontsize of the axes title
@@ -292,6 +331,21 @@ def graph_metrics_no_logging(graph_dir: str, csv_filename: str) -> None:
     )
     fig.savefig(image_filename)
 
+    fig, ax = plt.subplots(1, 1, figsize=(200, 100))
+    fig.tight_layout(pad=5.0)
+
+    ax.grid(True, color='r')
+    ax.plot_date(times, stall_values, ms=30)
+    ax.set_title("Stalling In Video")
+    ax.set_xlabel("Unix Time")
+    ax.set_ylabel(f"Stall or Not")
+
+    image_filename = (
+        graph_dir + "/" + "stall_timeline.png"
+    )
+    fig.savefig(image_filename)
+
+    
 
 
 #### OLD CODE
