@@ -207,20 +207,14 @@ def graph_metrics(graph_dir: str, csv_filename: str, log_queue) -> None:
         for row in csvreader:
             if row[0] == "time":
                 header = row
-                image_scores = {MetricType(metric_str_val): [] for metric_str_val in header[1:]}                                                       
+                image_scores = {MetricType(metric_str_val): [] for metric_str_val in header[1:-1]}                                                       
                 continue
             times.append(datetime.strptime(row[0], TIME_FORMAT))
-            for idx in range(1, len(row)):
+            for idx in range(1, len(row)-1):
                 image_scores[MetricType(header[idx])].append(float(row[idx]))
                 
             # code for checking if stalling exists
-            if len(image_scores[MetricType.LAPLACIAN]) == 1:
-                stall_values.append(0)
-            else:
-                if image_scores[MetricType.LAPLACIAN][-2] == image_scores[MetricType.LAPLACIAN][-1]:
-                    stall_values.append(1)
-                else:
-                    stall_values.append(0)
+            stall_values.append(int(row[-1]))
             
             # fix the issue where laplacian scores are too high (ie. in 1000s)
             if image_scores[MetricType.LAPLACIAN][-1] > 600:
@@ -284,10 +278,10 @@ def graph_metrics_no_logging(graph_dir: str, csv_filename: str) -> None:
         for row in csvreader:
             if row[0] == "time":
                 header = row
-                image_scores = {MetricType(metric_str_val): [] for metric_str_val in header[1:]}                                                       
+                image_scores = {MetricType(metric_str_val): [] for metric_str_val in header[1:-1]}                                                       
                 continue
             times.append(datetime.strptime(row[0], TIME_FORMAT))
-            for idx in range(1, len(row)):
+            for idx in range(1, len(row)-1):
                 image_scores[MetricType(header[idx])].append(float(row[idx]))
                 
             # code for checking if stalling exists

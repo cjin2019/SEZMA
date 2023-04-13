@@ -97,9 +97,10 @@ def pipeline_run(filename: str, frame_rate: float, log_queue, zoom_meeting_on_ch
     num_image_process_print: int = 100
     # do binary search if really necessary
     
+    prev_array_data = np.array([0])
     with open(filename, mode="w") as csv_file:
         csv_writer = csv.writer(csv_file)
-        csv_writer.writerow(["time"] + [metric_type.value for metric_type in MetricType])
+        csv_writer.writerow(["time"] + [metric_type.value for metric_type in MetricType] + ["is_stalled"])
         while zoom_meeting_on_check.is_set(): 
             try:
                 image_start_time = datetime.now()
@@ -111,7 +112,9 @@ def pipeline_run(filename: str, frame_rate: float, log_queue, zoom_meeting_on_ch
                 metrics= {metric_type: get_no_ref_score(image_data, metric_type) for metric_type in MetricType}
 
                 # record metrics
-                csv_writer.writerow([image_start_time.strftime(TIME_FORMAT)] + [metrics[metric_type] for metric_type in MetricType])
+                csv_writer.writerow([image_start_time.strftime(TIME_FORMAT)] + [metrics[metric_type] for metric_type in MetricType] + [1 if np.array_equal(prev_array_data, image_data) else 0])
+
+                prev_array_data = image_data
 
                 count_images += 1
                 if count_images % num_image_process_print == 0:
