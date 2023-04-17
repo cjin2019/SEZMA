@@ -1,5 +1,6 @@
 import configparser
 import csv
+import json
 import os
 import multiprocessing as mp
 import pgrep
@@ -123,32 +124,74 @@ def parse_mem_usage(mem_str) -> float:
     else: #in M
         return float(mem_str[:-1])
     
-def parse_monitor_files(filename: str, num_processes: int = 1) -> None:
+def parse_monitor_files(
+        filename: str, 
+        num_users: int, 
+        capture_rate: float, 
+        other_applications: str,
+        data_bytes_sent_per_second: str,
+        device_type: str,
+        mute: str,
+        motion: str
+    ) -> None:
 
-    cpu_percentages = []
-    mem_usages = []
+    pid_cpu = {}
+    pid_mem = {}
     with open(filename) as csvfile:
         csvreader = csv.reader(csvfile, delimiter=' ')
-        cpu_percentage = 0
-        mem_usage = 0
         for i, row in enumerate(csvreader):
             while '' in row:
                 row.remove('')
-            cpu_percentage += float(row[-2])
-            mem_usage += parse_mem_usage(row[-1])
-            if i%num_processes == num_processes-1:
-                cpu_percentages.append(cpu_percentage)
-                mem_usages.append(mem_usage)
-                cpu_percentage = 0
-                mem_usage = 0
-    print(f"Filename: {filename}")
-    print(f"Num cores: {mp.cpu_count()}")
-    print(f"CPU average: {sum(cpu_percentages) / len(cpu_percentages)}")
-    print(f"Memory average: {sum(mem_usages)/ len(mem_usages)}")
+
+            pid = int(row[1])
+            if pid not in pid_cpu:
+                pid_cpu[pid] = []
+            if pid not in pid_mem:
+                pid_mem[pid] = []
+            
+            pid_cpu[pid].append(float(row[-2]))
+            pid_mem[pid].append(parse_mem_usage(row[-1]))
+    
+    
+    # total
+    with open("benchmark.csv", "a") as output:
+        for pid in pid_cpu:
+            num_data_points = len(pid_cpu[pid])
+            data = [
+                filename[:filename.index(".")], 
+                str(pid), 
+                str(num_users),
+                str(capture_rate), 
+                other_applications, 
+                data_bytes_sent_per_second,
+                device_type,
+                mute,
+                motion,
+                str(sum(pid_cpu[pid]) / num_data_points),
+                str(sum(pid_mem[pid]) / num_data_points)
+            ]
+            output.write(",".join(data)+"\n")
         
 if __name__ == "__main__":
-    parse_monitor_files("videonetworkapp.csv", 6)
-    parse_monitor_files("zoom.csv")
+    config_setting = json.load(open("monitor/config.json"))
+    parse_monitor_files(
+        "videonetworkapp.csv", 
+        config_setting["num_users"], 
+        config_setting["capture_rate"], 
+        config_setting["other_applications"],
+        config_setting["data_bytes_sent_per_second"],
+        config_setting["device_type"],
+        config_setting["mute"],
+        config_setting["motion"])
+    parse_monitor_files(
+        "zoom.csv", 
+        config_setting["num_users"], 
+        config_setting["capture_rate"], 
+        config_setting["other_applications"],
+        config_setting["data_bytes_sent_per_second"],
+        config_setting["device_type"],
+        config_setting["mute"],
+        config_setting["motion"])
     ### wait until file exists with numbers
     # _, output_directory = open_config()
 
