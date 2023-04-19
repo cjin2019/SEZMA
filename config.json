@@ -1,5 +1,6 @@
 {
     "OutputDirectory" : "/Users/carolinejin/Documents/meng_project/data",
-    "FrameRate": 5,
+    "FrameRate": 10,
+    "VideoMetricsUsed": ["LAPLACIAN"],
     "IPAddress": "http://128.52.141.6:5000/"
 }

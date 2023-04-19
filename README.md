@@ -29,14 +29,15 @@ In order to run this app, you must run in `sudo` on Terminal.
 ##### Set Up
 Open up Terminal App. All the following commands will be run in Terminal.
 1. Once you unzip the file, `cd /path/to/mac_m1_macos_13` or `cd /path/to/mac_x86_64_macos_12`s
-2. In`config.ini` file,
-    1. REQUIRED: "OutputDirectoryt": absolute filepath of directory to store data
+2. In`config.json` file,
+    1. REQUIRED: "OutputDirectory": absolute filepath of directory to store data
     2. REQUIRED: "FrameRate": the screen capture at an initial frame capture rate (frames per second). The default frame capture rate may be too high for your laptop, in which case the frame rate will be reduced.  
+    3. REQUIRED: "VideoMetricsUsed": The default metrics shows all metrics available. You may remove metrics as you like. Note: the most intensive computation to least is NIQE, PIQE, and LAPLACIAN. You may want to start with LAPLACIAN first.
     3. NO CHANGE "IPAddress": IP address of the centralized server. 
 3. `sudo videonetworkapp.app/Contents/MacOS/videonetworkapp `. If a pop-up starting with " "videonetworkapp" can't be opened because Apple cannot check it for malicious software" opens, click OK. 
     1. You will need to give permissions to run the app. Open Privacy & Security in Settings and scroll down until you see " "videonetworkapp" was blocked from use because it is not from an identified developer". Click Open Anyway. 
     2. If the pop-up of " "videonetworkapp" can't be opened because Apple cannot check it for malicious software" opens again, click Open. The app will pop up, run, and then close. 
-4. `cp config.ini videonetworkapp.app/Contents/MacOS/config.ini`
+4. `cp config.json videonetworkapp.app/Contents/MacOS/config.json`
 5. Run `sudo videonetworkapp.app/Contents/MacOS/videonetworkapp` again. It should work now. 
 
 ##### Update

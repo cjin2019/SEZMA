@@ -1,4 +1,3 @@
-import configparser
 import json
 import multiprocessing as mp
 import os
@@ -11,15 +10,12 @@ from datetime import datetime
 from paramiko import SSHClient, AutoAddPolicy
 from typing import List, Tuple
 
-import app.monitor as monitor
 import app.network.network_run as network
 import app.video.video_run as video
-import app.video.video_run2 as video2
-from app.common.constants import SpecialQueueValues, TIME_FORMAT
+from app.video.metrics.image_score import MetricType
+from app.common.constants import SpecialQueueValues
 
-NO_KEYFILE_PATH = "NOT GIVEN"
-
-def open_config() -> Tuple[float,str, str]:
+def open_config() -> Tuple[float,str, str, List[MetricType]]:
     """
     Returns frame rate, output directory for graphs and logs, key_filepath for remote server
     """
@@ -29,6 +25,8 @@ def open_config() -> Tuple[float,str, str]:
     frame_rate: float = float(config["FrameRate"])
     output_directory: str = config["OutputDirectory"]
     ip_address: str = config["IPAddress"]
+    video_metrics_to_use: List[MetricType] = [MetricType(metric_type_str) for metric_type_str in config["VideoMetricsUsed"]]
+    
     # send_existing_output: bool = "SendOutputToServer" in config
 
     current_time = datetime.now().strftime("%Y-%m-%d_%H_%M")
@@ -38,7 +36,7 @@ def open_config() -> Tuple[float,str, str]:
     
     if output_directory[-1] == "/":
         output_directory = output_directory[:-1]
-    return (frame_rate, output_directory, ip_address)
+    return (frame_rate, output_directory, ip_address, video_metrics_to_use)
 
 def log_information(data_queue, filename: str, num_processes_finished: int = 1, flush_every_nth_line: int = 1):
     """
@@ -135,7 +133,7 @@ def delete_all_files(local_directory, log_queue) -> None:
 def run_app2():
     ctx = mp.get_context("spawn")
 
-    frame_rate, output_directory, ip_address = open_config()
+    frame_rate, output_directory, ip_address, video_metrics_to_use = open_config()
     
     log_queue = mp.JoinableQueue(maxsize=30)
     event_check_zoom_meeting_open = mp.Event()
@@ -143,8 +141,6 @@ def run_app2():
     video_csv_filename = output_directory + "/video.csv"
     network_csv_filename = output_directory + "/network.csv"
     log_filename = output_directory + "/log.txt"
-
-    print(log_filename)
 
     num_process_before_log_finished = 2 # graphing network, graphing video, sending results to server, and deleting on local
 
@@ -161,10 +157,8 @@ def run_app2():
         args=(network_csv_filename, log_queue, event_check_zoom_meeting_open,))
     
     video_process = ctx.Process(
-        target=video2.pipeline_run, 
-        args=(video_csv_filename, frame_rate, log_queue, event_check_zoom_meeting_open,))
-
-        # done processing when compute_process is done
+        target=video.pipeline_run, 
+        args=(video_csv_filename, frame_rate, log_queue, event_check_zoom_meeting_open,video_metrics_to_use))
 
     start_processes(
         log_process,
@@ -173,28 +167,12 @@ def run_app2():
         video_process,
     )
 
-    # pids = get_pids(
-    #     zoom_check_process,
-    #     network_process,
-    #     video_process,
-    # )
-    # pids += [os.getpid()]
-    # pids = [str(pid) for pid in pids]
-
-    # pid_csv = output_directory + "/pid.txt"
-    # with open(pid_csv, "w") as file:
-    #     file.write(",".join(pids))
-
     join_processes(
         zoom_check_process,
         network_process,
         video_process,
-        # monitor_process_usage_process,
     )
 
-    # network.graph_metrics(graph_dir=output_directory, csv_filename=network_csv_filename, log_queue=log_queue)
-    # video.graph_metrics(graph_dir=output_directory, csv_filename=video_csv_filename, log_queue=log_queue)
-    
     send_files_to_web_server(ip_address, output_directory, log_queue)
 
     # delete all files from directory
@@ -204,4 +182,3 @@ def run_app2():
 
 if __name__ == "__main__":
     run_app2()
-    #  video.graph_metrics_no_logging("/Users/carolinejin/Documents/meng_project/data/stall_values", "/Users/carolinejin/Documents/meng_project/data/stall_values/video.csv")

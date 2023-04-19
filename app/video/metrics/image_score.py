@@ -33,10 +33,8 @@ def get_no_ref_score(im, mode: "MetricType") -> float:
     score = -1
     if mode == MetricType.PIQE:
         score, _, _, _ = piqe(im)
-    elif mode == MetricType.NIQE:
+    if mode == MetricType.NIQE:
         score = niqe(im)
-    # elif mode == MetricType.BRISQUE:
-    #     score = self.BRISQUE.score(im)
     else:
         return laplacian_blur(im)
     
