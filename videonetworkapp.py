@@ -25,7 +25,7 @@ def open_config() -> Tuple[float,str, str, List[MetricType]]:
     frame_rate: float = float(config["FrameRate"])
     output_directory: str = config["OutputDirectory"]
     ip_address: str = config["IPAddress"]
-    video_metrics_to_use: List[MetricType] = [MetricType(metric_type_str) for metric_type_str in config["VideoMetricsUsed"]]
+    video_metrics_to_use: List[MetricType] = [MetricType(metric_type_str) for metric_type_str in config["VideoFrameMetricsUsed"]]
     # send_existing_output: bool = "SendOutputToServer" in config
 
     current_time = datetime.now().strftime("%Y-%m-%d_%H_%M")

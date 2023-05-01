@@ -23,6 +23,7 @@ class ZoomMediaHeader:
 @dataclass
 class RTPHeader:
     payload_type: "RTPWrapper"
+    ssrc_identifier: int
 
 
 class ZoomPacket:
@@ -90,8 +91,11 @@ class ZoomPacket:
             payload_type: "RTPWrapper" = RTPWrapper(payload_type_val)
 
             rtp_layer: "RTPHeader" = RTPHeader(
-                payload_type=payload_type
+                payload_type=payload_type,
+                ssrc_identifier= int.from_bytes(rtp_raw_bytes[8:12], byteorder='big', signed=False)
             )
+
+            # get unique identifier per participant
 
             return ZoomPacket(
                 udp_layer=udp_layer,
@@ -148,5 +152,9 @@ class ZoomPacket:
         Returns the size of the UDP packet
         """
         return len(self.__udp_load)
+    
+    @property
+    def ssrc_identifier(self) -> int:
+        return self.__rtp_layer.ssrc_identifier
 
     

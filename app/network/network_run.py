@@ -92,7 +92,8 @@ def write_metrics(filename: str, sink: QueueSink, zoom_meeting_check) -> None:
                     packet_time = packet.time.get_datetime(),
                     packet_size = packet.size,
                     expected_number_of_packets= packet.number_of_packets_per_frame,
-                    is_fec = packet.video_packet_type == RTPWrapper.FEC
+                    is_fec = packet.video_packet_type == RTPWrapper.FEC,
+                    ssrc_identifier=packet.ssrc_identifier,
             )
 
             if start_time == None:

@@ -28,11 +28,11 @@ In order to run this app, you must run in `sudo` on Terminal.
 
 ##### Set Up
 Open up Terminal App. All the following commands will be run in Terminal.
-1. Once you unzip the file, `cd /path/to/mac_m1_macos_13` or `cd /path/to/mac_x86_64_macos_12`s
+1. Once you unzip the file, `cd /path/to/mac_arm_macos_13` or `cd /path/to/mac_x86_64_macos_12`s
 2. In`config.json` file,
     1. REQUIRED: "OutputDirectory": absolute filepath of directory to store data
     2. REQUIRED: "FrameRate": the screen capture at an initial frame capture rate (frames per second). The default frame capture rate may be too high for your laptop, in which case the frame rate will be reduced.  
-    3. REQUIRED: "VideoMetricsUsed": The default metrics shows all metrics available. You may remove metrics as you like. Note: the most intensive computation to least is NIQE, PIQE, and LAPLACIAN. You may want to start with LAPLACIAN first.
+    3. REQUIRED: "VideoFrameMetricsUsed": The default metrics shows all metrics available. You may remove metrics as you like. Note: the most intensive computation to least is NIQE, PIQE, and LAPLACIAN. You may want to start with LAPLACIAN first.
     3. NO CHANGE "IPAddress": IP address of the centralized server. 
 3. `sudo videonetworkapp.app/Contents/MacOS/videonetworkapp `. If a pop-up starting with " "videonetworkapp" can't be opened because Apple cannot check it for malicious software" opens, click OK. 
     1. You will need to give permissions to run the app. Open Privacy & Security in Settings and scroll down until you see " "videonetworkapp" was blocked from use because it is not from an identified developer". Click Open Anyway. 
@@ -69,8 +69,7 @@ Open up Terminal App. All the following commands will be run in Terminal.
 
 1. Activate your virtual environment. `source venv/bin/activate`.
 2. If nuitka not installed, run `python3 -m pip install -U nuitka`
-3. Mac M1 command: `python3 -m nuitka --onefile --include-plugin-directory=app --include-data-files=/path/to/videonetworkapp/app/video/metrics/niqe_image_params.mat=app/video/metrics/niqe_image_params.mat --macos-create-app-bundle videonetworkapp.py` --> python used homebrew python3.9 (did not work with installed python in M1 due to recursion import error)
-4. Macbook Intel Laptop: `python3 -m nuitka --follow-imports --include-plugin-directory=app videonetworkapp.py`
+3. Mac command: `python3 -m nuitka --onefile --include-plugin-directory=app --include-data-files=/path/to/videonetworkapp/app/video/metrics/niqe_image_params.mat=app/video/metrics/niqe_image_params.mat --macos-create-app-bundle videonetworkapp.py` --> python used homebrew python3.9 (did not work with installed python in M1 due to recursion import error)
 
 #### FAQ
 ###### Failure in Installing Requirements

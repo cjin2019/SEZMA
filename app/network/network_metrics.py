@@ -14,4 +14,5 @@ class NetworkMetrics:
     packet_size: int
     expected_number_of_packets: int
     is_fec: bool
+    ssrc_identifier: int
 
