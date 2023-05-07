@@ -41,20 +41,20 @@ Open up Terminal App. All the following commands will be run in Terminal.
 5. Run `sudo videonetworkapp.app/Contents/MacOS/videonetworkapp` again. It should work now. 
 
 ##### Update
-1. If you want to update your `config.ini`, update as described in Set Up 2.1 and/or 2.2
-2. `cp config.ini videonetworkapp.app/Contents/MacOS/config.ini`
+1. If you want to update your `config.json`, update as described in Set Up 2.1 and/or 2.2
+2. `cp config.json videonetworkapp.app/Contents/MacOS/config.json`
 
 ### How to Run App from Codebase
 
 #### Install
 
 1. Requires Python >= 3.8 and <= 3.10
-2. Once you unzip file, `cd /path/to/videonetworkapp_codebase`
+2. Once you unzip file, `cd /path/to/SEZMA`
 3. Run `./install.sh`
 
 #### Run
 Open up Terminal App. All the following commands will be run in Terminal.
-1. Edit `config.ini` file to save 
+1. Edit `config.json` file to save 
     1. REQUIRED: "OutputDirectory": absolute filepath of directory to store data
     2. REQUIRED: "FrameRate": the screen capture at an initial frame capture rate (frames per second). The default frame capture rate may be too high for your laptop, in which case the frame rate will be reduced.  
     3. NO CHANGE "IPAddress": IP address of the centralized server. 
