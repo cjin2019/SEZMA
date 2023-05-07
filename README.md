@@ -34,15 +34,15 @@ Open up Terminal App. All the following commands will be run in Terminal.
     2. REQUIRED: "FrameRate": the screen capture at an initial frame capture rate (frames per second). The default frame capture rate may be too high for your laptop, in which case the frame rate will be reduced.  
     3. REQUIRED: "VideoFrameMetricsUsed": The default metrics shows all metrics available. You may remove metrics as you like. Note: the most intensive computation to least is NIQE, PIQE, and LAPLACIAN. You may want to start with LAPLACIAN first.
     3. NO CHANGE "IPAddress": IP address of the centralized server. 
-3. `sudo videonetworkapp.app/Contents/MacOS/videonetworkapp `. If a pop-up starting with " "videonetworkapp" can't be opened because Apple cannot check it for malicious software" opens, click OK. 
-    1. You will need to give permissions to run the app. Open Privacy & Security in Settings and scroll down until you see " "videonetworkapp" was blocked from use because it is not from an identified developer". Click Open Anyway. 
-    2. If the pop-up of " "videonetworkapp" can't be opened because Apple cannot check it for malicious software" opens again, click Open. The app will pop up, run, and then close. 
-4. `cp config.json videonetworkapp.app/Contents/MacOS/config.json`
-5. Run `sudo videonetworkapp.app/Contents/MacOS/videonetworkapp` again. It should work now. 
+3. `sudo sezma.app/Contents/MacOS/sezma`. If a pop-up starting with " "sezma" can't be opened because Apple cannot check it for malicious software" opens, click OK. 
+    1. You will need to give permissions to run the app. Open Privacy & Security in Settings and scroll down until you see " "sezma" was blocked from use because it is not from an identified developer". Click Open Anyway. 
+    2. If the pop-up of " "sezma" can't be opened because Apple cannot check it for malicious software" opens again, click Open. The app will pop up, run, and then close. 
+4. `cp config.json sezma.app/Contents/MacOS/config.json`
+5. Run `sudo sezma.app/Contents/MacOS/sezma` again. It should work now. 
 
 ##### Update
 1. If you want to update your `config.json`, update as described in Set Up 2.1 and/or 2.2
-2. `cp config.json videonetworkapp.app/Contents/MacOS/config.json`
+2. `cp config.json sezma.app/Contents/MacOS/config.json`
 
 ### How to Run App from Codebase
 
@@ -58,7 +58,7 @@ Open up Terminal App. All the following commands will be run in Terminal.
     1. REQUIRED: "OutputDirectory": absolute filepath of directory to store data
     2. REQUIRED: "FrameRate": the screen capture at an initial frame capture rate (frames per second). The default frame capture rate may be too high for your laptop, in which case the frame rate will be reduced.  
     3. NO CHANGE "IPAddress": IP address of the centralized server. 
-2. `cd /path/to/videonetworkapp_codebase`
+2. `cd /path/to/SEZMA`
 3. `sudo ./run.sh`
 
 #### Monitor Run
@@ -69,7 +69,7 @@ Open up Terminal App. All the following commands will be run in Terminal.
 
 1. Activate your virtual environment. `source venv/bin/activate`.
 2. If nuitka not installed, run `python3 -m pip install -U nuitka`
-3. Mac command: `python3 -m nuitka --onefile --include-plugin-directory=app --include-data-files=/path/to/videonetworkapp/app/video/metrics/niqe_image_params.mat=app/video/metrics/niqe_image_params.mat --macos-create-app-bundle videonetworkapp.py` --> python used homebrew python3.9 (did not work with installed python in M1 due to recursion import error)
+3. Mac command: `python3 -m nuitka --onefile --include-plugin-directory=app --include-data-files=/path/to/SEZMA/app/video/metrics/niqe_image_params.mat=app/video/metrics/niqe_image_params.mat --macos-create-app-bundle sezma.py` --> python used homebrew python3.9 (did not work with installed python in M1 due to recursion import error)
 
 #### FAQ
 ###### Failure in Installing Requirements
