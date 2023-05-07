@@ -1,3 +1,3 @@
 #!/bin/sh
 source venv/bin/activate
-python3 sezma.py
+python3 videonetworkapp.py
