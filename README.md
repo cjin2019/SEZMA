@@ -1,4 +1,4 @@
-# VideoAnalysis Software
+# SEZMA
 
 ## Requirements
 
